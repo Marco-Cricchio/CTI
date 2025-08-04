@@ -323,7 +323,7 @@ logger.error('External API timeout', {
 ### Setup Iniziale
 ```bash
 # Clone e setup
-git clone <repository-url>
+git clone https://github.com/Marco-Cricchio/CTI
 cd cyberforge-sentinel
 npm install
 
@@ -458,6 +458,30 @@ export class IndicatorsController {
 
 ---
 
-**Ultimo aggiornamento:** 2025-08-03  
+---
+
+## 9. Repository Information
+
+### Repository URL
+- **GitHub Repository:** https://github.com/Marco-Cricchio/CTI
+- **Project Name:** CyberForge Sentinel (CTI - Cyber Threat Intelligence)
+- **Branch principale:** `main`
+
+### Comandi Git Essenziali
+```bash
+# Aggiungere remote repository (se non già configurato)
+git remote add origin https://github.com/Marco-Cricchio/CTI
+
+# Push al repository
+git push -u origin main
+
+# Clone del repository
+git clone https://github.com/Marco-Cricchio/CTI
+```
+
+---
+
+**Ultimo aggiornamento:** 2025-08-04  
 **Versione:** 1.0.0  
-**Maintainer:** Development Team CyberForge Sentinel
+**Maintainer:** Development Team CyberForge Sentinel  
+**Repository:** https://github.com/Marco-Cricchio/CTI
