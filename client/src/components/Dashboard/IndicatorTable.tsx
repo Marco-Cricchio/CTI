@@ -38,10 +38,13 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
           ...filters,
         },
       });
-      setIndicators(response.data.data);
-      setTotalItems(response.data.total);
+      // AGGIUNGI UN CONTROLLO: se response.data.data non esiste, usa un array vuoto
+      setIndicators(response.data.data || []);
+      setTotalItems(response.data.total || 0);
     } catch (err) {
       toast.error('Failed to fetch indicators.');
+      setIndicators([]); // In caso di errore, imposta un array vuoto
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
@@ -112,7 +115,8 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
             </tr>
           </thead>
           <tbody>
-            {indicators.map(indicator => (
+            {/* AGGIUNGI UN CONTROLLO DI SICUREZZA PRIMA DEL MAP */}
+            {Array.isArray(indicators) && indicators.map(indicator => (
               <tr key={indicator.id} className={styles.row}>
                 <td className={styles.value}>{indicator.value}</td>
                 <td className={styles.type}>{indicator.type}</td>
