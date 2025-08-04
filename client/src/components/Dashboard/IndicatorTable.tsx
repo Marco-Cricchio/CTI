@@ -1,7 +1,8 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 import api from '../../services/api';
 import styles from './IndicatorTable.module.css';
 import { toast } from 'react-hot-toast';
+import { Pagination } from '../shared/Pagination';
 
 interface Indicator {
   id: string;
@@ -22,22 +23,33 @@ interface IndicatorTableProps {
 export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTableProps>(({ onDeleteSuccess, onEdit }, ref) => {
   const [indicators, setIndicators] = useState<Indicator[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState({ type: '', threat_level: '' });
+  const itemsPerPage = 10;
 
-  const fetchIndicators = async () => {
+  const fetchIndicators = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get('/indicators');
-      setIndicators(response.data);
+      const response = await api.get('/indicators', {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          ...filters,
+        },
+      });
+      setIndicators(response.data.data);
+      setTotalItems(response.data.total);
     } catch (err) {
       toast.error('Failed to fetch indicators.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, filters]);
 
   useEffect(() => {
     fetchIndicators();
-  }, []);
+  }, [fetchIndicators]);
 
   useImperativeHandle(ref, () => ({
     refetch() {
@@ -51,6 +63,7 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
         await api.delete(`/indicators/${indicatorId}`);
         toast.success('Indicator deleted successfully.');
         onDeleteSuccess();
+        fetchIndicators(); // Refresh current page
       } catch (error) {
         console.error('Failed to delete indicator', error);
         toast.error('Failed to delete indicator.');
@@ -58,12 +71,34 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
     }
   };
 
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+    setCurrentPage(1); // Reset to first page on filter change
+  };
+
   if (loading) return <div className={styles.container}>Loading indicators...</div>;
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
+      <div className={styles.tableHeader}>
         <h3 className={styles.title}>Latest Indicators</h3>
-        <button className={styles.viewAllBtn}>View All</button>
+        <div className={styles.filters}>
+          <select name="type" value={filters.type} onChange={handleFilterChange}>
+            <option value="">All Types</option>
+            <option value="ip">IP</option>
+            <option value="domain">Domain</option>
+            <option value="url">URL</option>
+            <option value="file_hash">File Hash</option>
+            <option value="email">Email</option>
+          </select>
+          <select name="threat_level" value={filters.threat_level} onChange={handleFilterChange}>
+            <option value="">All Threat Levels</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
       </div>
       
       <div className={styles.tableWrapper}>
@@ -105,6 +140,12 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
           </tbody>
         </table>
       </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 });
