@@ -16,9 +16,10 @@ export interface IndicatorTableHandles {
 
 interface IndicatorTableProps {
   onDeleteSuccess: () => void;
+  onEdit: (indicator: Indicator) => void;
 }
 
-export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTableProps>(({ onDeleteSuccess }, ref) => {
+export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTableProps>(({ onDeleteSuccess, onEdit }, ref) => {
   const [indicators, setIndicators] = useState<Indicator[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -86,6 +87,12 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
                   </span>
                 </td>
                 <td>
+                  <button
+                    onClick={() => onEdit(indicator)}
+                    className={styles.actionButton}
+                  >
+                    Edit
+                  </button>
                   <button
                     onClick={() => handleDelete(indicator.id)}
                     className={`${styles.actionButton} ${styles.deleteButton}`}

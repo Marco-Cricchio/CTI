@@ -130,6 +130,11 @@
   cursor: pointer;
   font-size: var(--text-xs);
   transition: all var(--transition-fast);
+  margin-right: var(--space-2);
+}
+
+.actionButton:last-child {
+  margin-right: 0;
 }
 
 .actionButton:hover {

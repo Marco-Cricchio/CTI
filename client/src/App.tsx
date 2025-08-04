@@ -20,19 +20,33 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return user ? <>{children}</> : <Navigate to="/login" />;
 };
 
+interface Indicator { 
+  id: string; 
+  value: string; 
+  type: string; 
+  threat_level: string; 
+}
+
 // Componente per la pagina della Dashboard
 function DashboardPage() {
   const { stats, loading, refetch: refetchStats } = useDashboardStats();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [indicatorToEdit, setIndicatorToEdit] = useState<Indicator | null>(null);
   const tableRef = useRef<IndicatorTableHandles>(null);
 
-  const handleAddSuccess = () => {
-    setIsModalOpen(false);
-    tableRef.current?.refetch();
-    refetchStats();
+  const handleOpenAddModal = () => {
+    setIndicatorToEdit(null);
+    setIsModalOpen(true);
   };
 
-  const handleDeleteSuccess = () => {
+  const handleOpenEditModal = (indicator: Indicator) => {
+    setIndicatorToEdit(indicator);
+    setIsModalOpen(true);
+  };
+
+  const handleSuccess = () => {
+    setIsModalOpen(false);
+    setIndicatorToEdit(null);
     tableRef.current?.refetch();
     refetchStats();
   };
@@ -42,7 +56,7 @@ function DashboardPage() {
       <div className={layoutStyles.appContainer}>
         <Sidebar />
         <main className={layoutStyles.mainContent}>
-          <Header onAddNew={() => setIsModalOpen(true)} />
+          <Header onAddNew={handleOpenAddModal} />
           <div className={layoutStyles.pageContent}>
             <div className={dashboardStyles.dashboardGrid}>
               <div className={dashboardStyles.statsGrid}>
@@ -51,13 +65,13 @@ function DashboardPage() {
                 <MetricCard title="Active Investigations" value={loading ? '...' : stats?.activeInvestigations} />
                 <MetricCard title="Data Feeds" value={loading ? '...' : stats?.dataFeeds} />
               </div>
-              <IndicatorTable ref={tableRef} onDeleteSuccess={handleDeleteSuccess} />
+              <IndicatorTable ref={tableRef} onDeleteSuccess={handleSuccess} onEdit={handleOpenEditModal} />
             </div>
           </div>
         </main>
       </div>
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Indicator">
-        <AddIndicatorForm onSuccess={handleAddSuccess} />
+      <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setIndicatorToEdit(null); }} title={indicatorToEdit ? 'Edit Indicator' : 'Add New Indicator'}>
+        <AddIndicatorForm onSuccess={handleSuccess} indicatorToEdit={indicatorToEdit} />
       </Modal>
     </>
   );

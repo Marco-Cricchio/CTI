@@ -1,18 +1,36 @@
 // client/src/components/Indicators/AddIndicatorForm.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './AddIndicatorForm.module.css';
 import api from '../../services/api';
 import { toast } from 'react-hot-toast';
 
-interface AddIndicatorFormProps {
-  onSuccess: () => void; // Callback per notificare il successo
+interface Indicator {
+  id: string;
+  value: string;
+  type: string;
+  threat_level: string;
 }
 
-export const AddIndicatorForm: React.FC<AddIndicatorFormProps> = ({ onSuccess }) => {
+interface AddIndicatorFormProps {
+  onSuccess: () => void;
+  indicatorToEdit?: Indicator | null; // Indicatore opzionale per la modalità modifica
+}
+
+export const AddIndicatorForm: React.FC<AddIndicatorFormProps> = ({ onSuccess, indicatorToEdit }) => {
   const [value, setValue] = useState('');
   const [type, setType] = useState('ip');
   const [threatLevel, setThreatLevel] = useState('low');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isEditMode = !!indicatorToEdit;
+
+  useEffect(() => {
+    if (isEditMode && indicatorToEdit) {
+      setValue(indicatorToEdit.value);
+      setType(indicatorToEdit.type);
+      setThreatLevel(indicatorToEdit.threat_level);
+    }
+  }, [isEditMode, indicatorToEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,17 +39,21 @@ export const AddIndicatorForm: React.FC<AddIndicatorFormProps> = ({ onSuccess })
       return;
     }
     setIsSubmitting(true);
+    
+    const payload = { value, type, threat_level: threatLevel };
+
     try {
-      await api.post('/indicators', {
-        value,
-        type,
-        threat_level: threatLevel,
-      });
-      toast.success('Indicator added successfully!');
-      onSuccess(); // Chiama il callback
+      if (isEditMode && indicatorToEdit) {
+        await api.patch(`/indicators/${indicatorToEdit.id}`, payload);
+        toast.success('Indicator updated successfully!');
+      } else {
+        await api.post('/indicators', payload);
+        toast.success('Indicator added successfully!');
+      }
+      onSuccess();
     } catch (error) {
-      console.error('Failed to add indicator', error);
-      toast.error('Failed to add indicator. Please try again.');
+      console.error('Operation failed', error);
+      toast.error('Operation failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -71,7 +93,7 @@ export const AddIndicatorForm: React.FC<AddIndicatorFormProps> = ({ onSuccess })
       </div>
       <div className={styles.actions}>
         <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
-          {isSubmitting ? 'Adding...' : 'Add Indicator'}
+          {isSubmitting ? 'Saving...' : (isEditMode ? 'Update Indicator' : 'Add Indicator')}
         </button>
       </div>
     </form>
