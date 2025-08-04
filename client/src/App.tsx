@@ -1,12 +1,14 @@
 // client/src/App.tsx
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import { MetricCard } from './components/Dashboard/MetricCard';
-import { IndicatorTable } from './components/Dashboard/IndicatorTable';
+import { IndicatorTable, IndicatorTableHandles } from './components/Dashboard/IndicatorTable';
+import { Modal } from './components/shared/Modal';
+import { AddIndicatorForm } from './components/Indicators/AddIndicatorForm';
 import { useDashboardStats } from './hooks/useDashboardStats';
 import layoutStyles from './components/Layout/Layout.module.css';
 import dashboardStyles from './components/Dashboard/Dashboard.module.css';
@@ -21,24 +23,37 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // Componente per la pagina della Dashboard
 function DashboardPage() {
   const { stats, loading } = useDashboardStats();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const tableRef = useRef<IndicatorTableHandles>(null);
+
+  const handleSuccess = () => {
+    setIsModalOpen(false); // Chiudi il modale
+    tableRef.current?.refetch(); // Ricarica i dati della tabella
+  };
+
   return (
-    <div className={layoutStyles.appContainer}>
-      <Sidebar />
-      <main className={layoutStyles.mainContent}>
-        <Header />
-        <div className={layoutStyles.pageContent}>
-          <div className={dashboardStyles.dashboardGrid}>
-            <div className={dashboardStyles.statsGrid}>
-              <MetricCard title="New IOCs (24h)" value={loading ? '...' : stats?.newIocs24h} />
-              <MetricCard title="Critical Alerts" value={loading ? '...' : stats?.criticalAlerts} />
-              <MetricCard title="Active Investigations" value={loading ? '...' : stats?.activeInvestigations} />
-              <MetricCard title="Data Feeds" value={loading ? '...' : stats?.dataFeeds} />
+    <>
+      <div className={layoutStyles.appContainer}>
+        <Sidebar />
+        <main className={layoutStyles.mainContent}>
+          <Header onAddNew={() => setIsModalOpen(true)} />
+          <div className={layoutStyles.pageContent}>
+            <div className={dashboardStyles.dashboardGrid}>
+              <div className={dashboardStyles.statsGrid}>
+                <MetricCard title="New IOCs (24h)" value={loading ? '...' : stats?.newIocs24h} />
+                <MetricCard title="Critical Alerts" value={loading ? '...' : stats?.criticalAlerts} />
+                <MetricCard title="Active Investigations" value={loading ? '...' : stats?.activeInvestigations} />
+                <MetricCard title="Data Feeds" value={loading ? '...' : stats?.dataFeeds} />
+              </div>
+              <IndicatorTable ref={tableRef} />
             </div>
-            <IndicatorTable />
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Indicator">
+        <AddIndicatorForm onSuccess={handleSuccess} />
+      </Modal>
+    </>
   );
 }
 

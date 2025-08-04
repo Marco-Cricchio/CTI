@@ -43,3 +43,13 @@
   background-color: #ea580c;
   transform: translateY(-1px);
 }
+
+.newButton {
+  background-color: var(--accent-blue);
+  color: white;
+  border: none;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: var(--font-medium);
+}

@@ -1,43 +1,46 @@
-import React from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import api from '../../services/api';
 import styles from './IndicatorTable.module.css';
+import { toast } from 'react-hot-toast';
 
 interface Indicator {
   id: string;
   value: string;
   type: string;
-  threatLevel: 'low' | 'medium' | 'high' | 'critical';
-  firstSeen: string;
-  source: string;
+  threat_level: string;
 }
 
-const mockIndicators: Indicator[] = [
-  {
-    id: '1',
-    value: '192.168.1.100',
-    type: 'IP',
-    threatLevel: 'high',
-    firstSeen: '2025-01-04 14:30:15',
-    source: 'VirusTotal'
-  },
-  {
-    id: '2',
-    value: 'malicious.example.com',
-    type: 'Domain',
-    threatLevel: 'critical',
-    firstSeen: '2025-01-04 13:45:22',
-    source: 'AlienVault'
-  },
-  {
-    id: '3',
-    value: 'c4b2e5f8a9d7e3c1',
-    type: 'Hash',
-    threatLevel: 'medium',
-    firstSeen: '2025-01-04 12:20:10',
-    source: 'Internal'
-  }
-];
+export interface IndicatorTableHandles {
+  refetch: () => void;
+}
 
-export const IndicatorTable: React.FC = () => {
+export const IndicatorTable = forwardRef<IndicatorTableHandles>((_props, ref) => {
+  const [indicators, setIndicators] = useState<Indicator[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchIndicators = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get('/indicators');
+      setIndicators(response.data);
+    } catch (err) {
+      toast.error('Failed to fetch indicators.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchIndicators();
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    refetch() {
+      fetchIndicators();
+    }
+  }));
+
+  if (loading) return <div className={styles.container}>Loading indicators...</div>;
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -52,22 +55,20 @@ export const IndicatorTable: React.FC = () => {
               <th>IOC Value</th>
               <th>Type</th>
               <th>Threat Level</th>
-              <th>First Seen</th>
-              <th>Source</th>
+              <th>ID</th>
             </tr>
           </thead>
           <tbody>
-            {mockIndicators.map(indicator => (
+            {indicators.map(indicator => (
               <tr key={indicator.id} className={styles.row}>
                 <td className={styles.value}>{indicator.value}</td>
                 <td className={styles.type}>{indicator.type}</td>
                 <td>
-                  <span className={`${styles.threatBadge} ${styles[indicator.threatLevel]}`}>
-                    {indicator.threatLevel}
+                  <span className={`${styles.threatBadge} ${styles[indicator.threat_level]}`}>
+                    {indicator.threat_level}
                   </span>
                 </td>
-                <td className={styles.date}>{indicator.firstSeen}</td>
-                <td className={styles.source}>{indicator.source}</td>
+                <td className={styles.date}>{indicator.id}</td>
               </tr>
             ))}
           </tbody>
@@ -75,4 +76,4 @@ export const IndicatorTable: React.FC = () => {
       </div>
     </div>
   );
-};
+});

@@ -1,0 +1,43 @@
+/* client/src/components/Indicators/AddIndicatorForm.module.css */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.formGroup label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.formGroup input,
+.formGroup select {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+}
+
+.actions {
+  margin-top: var(--space-4);
+  text-align: right;
+}
+
+.submitButton {
+  background-color: var(--accent-blue);
+  color: white;
+  border: none;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+}
