@@ -22,13 +22,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Componente per la pagina della Dashboard
 function DashboardPage() {
-  const { stats, loading } = useDashboardStats();
+  const { stats, loading, refetch: refetchStats } = useDashboardStats();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const tableRef = useRef<IndicatorTableHandles>(null);
 
-  const handleSuccess = () => {
-    setIsModalOpen(false); // Chiudi il modale
-    tableRef.current?.refetch(); // Ricarica i dati della tabella
+  const handleAddSuccess = () => {
+    setIsModalOpen(false);
+    tableRef.current?.refetch();
+    refetchStats();
+  };
+
+  const handleDeleteSuccess = () => {
+    tableRef.current?.refetch();
+    refetchStats();
   };
 
   return (
@@ -45,13 +51,13 @@ function DashboardPage() {
                 <MetricCard title="Active Investigations" value={loading ? '...' : stats?.activeInvestigations} />
                 <MetricCard title="Data Feeds" value={loading ? '...' : stats?.dataFeeds} />
               </div>
-              <IndicatorTable ref={tableRef} />
+              <IndicatorTable ref={tableRef} onDeleteSuccess={handleDeleteSuccess} />
             </div>
           </div>
         </main>
       </div>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Indicator">
-        <AddIndicatorForm onSuccess={handleSuccess} />
+        <AddIndicatorForm onSuccess={handleAddSuccess} />
       </Modal>
     </>
   );

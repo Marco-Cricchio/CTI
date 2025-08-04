@@ -14,7 +14,11 @@ export interface IndicatorTableHandles {
   refetch: () => void;
 }
 
-export const IndicatorTable = forwardRef<IndicatorTableHandles>((_props, ref) => {
+interface IndicatorTableProps {
+  onDeleteSuccess: () => void;
+}
+
+export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTableProps>(({ onDeleteSuccess }, ref) => {
   const [indicators, setIndicators] = useState<Indicator[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,6 +44,19 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles>((_props, ref) =>
     }
   }));
 
+  const handleDelete = async (indicatorId: string) => {
+    if (window.confirm('Are you sure you want to delete this indicator?')) {
+      try {
+        await api.delete(`/indicators/${indicatorId}`);
+        toast.success('Indicator deleted successfully.');
+        onDeleteSuccess();
+      } catch (error) {
+        console.error('Failed to delete indicator', error);
+        toast.error('Failed to delete indicator.');
+      }
+    }
+  };
+
   if (loading) return <div className={styles.container}>Loading indicators...</div>;
   return (
     <div className={styles.container}>
@@ -55,7 +72,7 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles>((_props, ref) =>
               <th>IOC Value</th>
               <th>Type</th>
               <th>Threat Level</th>
-              <th>ID</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -68,7 +85,14 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles>((_props, ref) =>
                     {indicator.threat_level}
                   </span>
                 </td>
-                <td className={styles.date}>{indicator.id}</td>
+                <td>
+                  <button
+                    onClick={() => handleDelete(indicator.id)}
+                    className={`${styles.actionButton} ${styles.deleteButton}`}
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
