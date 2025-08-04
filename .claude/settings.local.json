@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx @nestjs/cli new:*)",
+      "Bash(npm install:*)",
+      "Bash(mkdir:*)",
+      "Bash(pkill:*)",
+      "Bash(npx @nestjs/cli generate module:*)",
+      "Bash(npx @nestjs/cli generate controller:*)",
+      "Bash(npx @nestjs/cli generate service:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(npm run build:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git rm:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(npx create-react-app:*)",
+      "Bash(ls:*)",
+      "Bash(curl:*)",
+      "Bash(cp:*)",
+      "Bash(find:*)",
+      "Bash(npm run start:dev:*)",
+      "Bash(touch:*)",
+      "Bash(kill:*)"
+    ],
+    "deny": []
+  }
+}

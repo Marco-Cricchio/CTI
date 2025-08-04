@@ -1,0 +1,122 @@
+.container {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--bg-tertiary);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.title {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: var(--font-light);
+  margin: 0;
+}
+
+.viewAllBtn {
+  background-color: var(--accent-blue);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viewAllBtn:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-weight: var(--font-light);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 1.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.row {
+  transition: background-color 0.2s ease;
+}
+
+.row:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--bg-tertiary);
+}
+
+.value {
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.type {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.threatBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.threatBadge.low {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.threatBadge.medium {
+  background-color: rgba(251, 146, 60, 0.2);
+  color: #fb923c;
+}
+
+.threatBadge.high {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.threatBadge.critical {
+  background-color: rgba(220, 38, 127, 0.2);
+  color: #dc267f;
+}
+
+.date {
+  color: var(--text-tertiary);
+  font-size: 0.8rem;
+  font-family: 'Courier New', monospace;
+}
+
+.source {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}

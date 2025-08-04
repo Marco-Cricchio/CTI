@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Design System</title>
+    <link rel="stylesheet" href="style-guide.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="p-8">
+            <h1 class="text-6xl text-thin text-center mb-4">Professional Design System</h1>
+            <p class="text-xl text-secondary text-center">Dark theme with blue and orange accents</p>
+        </header>
+
+        <!-- Color Palette Section -->
+        <section class="mb-16">
+            <h2 class="text-3xl text-light mb-8">Color Palette</h2>
+            
+            <div class="mb-8">
+                <h3 class="text-xl text-light mb-4">Background Colors</h3>
+                <div class="flex flex-wrap gap-4">
+                    <div class="card" style="background-color: var(--bg-primary); width: 120px; height: 80px;">
+                        <div class="text-xs text-secondary">Primary<br>#0d1117</div>
+                    </div>
+                    <div class="card" style="background-color: var(--bg-secondary); width: 120px; height: 80px;">
+                        <div class="text-xs text-secondary">Secondary<br>#161b22</div>
+                    </div>
+                    <div class="card" style="background-color: var(--bg-tertiary); width: 120px; height: 80px;">
+                        <div class="text-xs text-secondary">Tertiary<br>#21262d</div>
+                    </div>
+                    <div class="card" style="background-color: var(--bg-elevated); width: 120px; height: 80px;">
+                        <div class="text-xs text-secondary">Elevated<br>#30363d</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <h3 class="text-xl text-light mb-4">Accent Colors</h3>
+                <div class="flex flex-wrap gap-4">
+                    <div class="card" style="background-color: var(--accent-blue); width: 120px; height: 80px;">
+                        <div class="text-xs text-inverse">Blue Accent<br>#3b82f6</div>
+                    </div>
+                    <div class="card" style="background-color: var(--accent-orange); width: 120px; height: 80px;">
+                        <div class="text-xs text-inverse">Orange Accent<br>#fb923c</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography Section -->
+        <section class="mb-16">
+            <h2 class="text-3xl text-light mb-8">Typography</h2>
+            
+            <div class="card mb-6">
+                <h3 class="text-xl text-light mb-4">Font Weights</h3>
+                <div class="space-y-2">
+                    <p class="text-thin text-lg">Thin (100) - Ultra-light display text</p>
+                    <p class="text-light text-lg">Light (300) - Primary body text weight</p>
+                    <p class="text-normal text-lg">Normal (400) - Standard text</p>
+                    <p class="text-medium text-lg">Medium (500) - Emphasis text</p>
+                    <p class="text-semibold text-lg">Semibold (600) - Strong emphasis</p>
+                    <p class="text-bold text-lg">Bold (700) - Maximum emphasis</p>
+                </div>
+            </div>
+
+            <div class="card mb-6">
+                <h3 class="text-xl text-light mb-4">Heading Hierarchy</h3>
+                <h1 class="text-thin">H1 Heading - Thin Display</h1>
+                <h2 class="text-thin">H2 Heading - Section Title</h2>
+                <h3 class="text-light">H3 Heading - Subsection</h3>
+                <h4 class="text-light">H4 Heading - Component Title</h4>
+                <h5 class="text-normal">H5 Heading - Small Section</h5>
+                <h6 class="text-normal">H6 Heading - Label</h6>
+            </div>
+
+            <div class="card">
+                <h3 class="text-xl text-light mb-4">Text Colors</h3>
+                <p class="text-primary mb-2">Primary text - Main content</p>
+                <p class="text-secondary mb-2">Secondary text - Supporting information</p>
+                <p class="text-tertiary mb-2">Tertiary text - Disabled or placeholder</p>
+                <p class="text-blue mb-2">Blue accent text - Links and actions</p>
+                <p class="text-orange">Orange accent text - Highlights and warnings</p>
+            </div>
+        </section>
+
+        <!-- Components Section -->
+        <section class="mb-16">
+            <h2 class="text-3xl text-light mb-8">Components</h2>
+            
+            <!-- Buttons -->
+            <div class="card mb-6">
+                <h3 class="text-xl text-light mb-4">Buttons</h3>
+                <div class="flex flex-wrap gap-4">
+                    <button class="btn btn-primary">Primary Button</button>
+                    <button class="btn btn-secondary">Secondary Button</button>
+                    <button class="btn btn-outline">Outline Button</button>
+                </div>
+            </div>
+
+            <!-- Form Elements -->
+            <div class="card mb-6">
+                <h3 class="text-xl text-light mb-4">Form Elements</h3>
+                <div class="space-y-4">
+                    <input type="text" class="input" placeholder="Enter your text here...">
+                    <input type="email" class="input" placeholder="email@example.com">
+                    <textarea class="input" rows="3" placeholder="Your message..."></textarea>
+                </div>
+            </div>
+
+            <!-- Cards -->
+            <div class="card mb-6">
+                <h3 class="text-xl text-light mb-4">Card Examples</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="card">
+                        <h4 class="text-lg text-light mb-2">Feature Card</h4>
+                        <p class="text-secondary text-sm mb-4">This is a sample card showing how content looks with our design system.</p>
+                        <button class="btn btn-primary">Learn More</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 class="text-lg text-light mb-2">Another Card</h4>
+                        <p class="text-secondary text-sm mb-4">Cards use subtle shadows and borders to create depth without being overwhelming.</p>
+                        <button class="btn btn-secondary">Get Started</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 class="text-lg text-light mb-2">Third Card</h4>
+                        <p class="text-secondary text-sm mb-4">The thin typography creates an elegant, professional appearance.</p>
+                        <button class="btn btn-outline">Explore</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Layout Examples -->
+        <section class="mb-16">
+            <h2 class="text-3xl text-light mb-8">Layout Examples</h2>
+            
+            <div class="card mb-6">
+                <h3 class="text-xl text-light mb-4">Navigation Bar</h3>
+                <nav class="flex justify-between items-center p-4 bg-tertiary rounded">
+                    <div class="text-lg text-light">Brand</div>
+                    <div class="flex gap-6">
+                        <a href="#" class="text-secondary hover:text-blue transition-colors">Home</a>
+                        <a href="#" class="text-secondary hover:text-blue transition-colors">About</a>
+                        <a href="#" class="text-secondary hover:text-blue transition-colors">Services</a>
+                        <a href="#" class="text-secondary hover:text-blue transition-colors">Contact</a>
+                    </div>
+                    <button class="btn btn-primary">Sign Up</button>
+                </nav>
+            </div>
+
+            <div class="card mb-6">
+                <h3 class="text-xl text-light mb-4">Hero Section</h3>
+                <div class="text-center p-8 bg-tertiary rounded">
+                    <h1 class="text-5xl text-thin mb-4">Welcome to Our Platform</h1>
+                    <p class="text-xl text-secondary mb-8">Experience professional design with our clean, modern interface</p>
+                    <div class="flex justify-center gap-4">
+                        <button class="btn btn-primary">Get Started</button>
+                        <button class="btn btn-outline">Learn More</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="text-xl text-light mb-4">Content Grid</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="p-4 bg-tertiary rounded text-center">
+                        <div class="text-3xl text-blue mb-2">1k+</div>
+                        <div class="text-sm text-secondary">Users</div>
+                    </div>
+                    <div class="p-4 bg-tertiary rounded text-center">
+                        <div class="text-3xl text-orange mb-2">24/7</div>
+                        <div class="text-sm text-secondary">Support</div>
+                    </div>
+                    <div class="p-4 bg-tertiary rounded text-center">
+                        <div class="text-3xl text-blue mb-2">99%</div>
+                        <div class="text-sm text-secondary">Uptime</div>
+                    </div>
+                    <div class="p-4 bg-tertiary rounded text-center">
+                        <div class="text-3xl text-orange mb-2">Fast</div>
+                        <div class="text-sm text-secondary">Performance</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center p-8 border-t border-primary">
+            <p class="text-secondary text-sm">Professional Design System - Dark theme with blue and orange accents</p>
+        </footer>
+    </div>
+
+    <style>
+        /* Additional styles for grid layout */
+        .grid {
+            display: grid;
+        }
+        .grid-cols-1 {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+        .gap-4 {
+            gap: var(--space-4);
+        }
+        .space-y-2 > * + * {
+            margin-top: var(--space-2);
+        }
+        .space-y-4 > * + * {
+            margin-top: var(--space-4);
+        }
+        .transition-colors {
+            transition: color var(--transition-base);
+        }
+        
+        @media (min-width: 768px) {
+            .md\\:grid-cols-2 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .lg\\:grid-cols-3 {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+            .lg\\:grid-cols-4 {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+    </style>
+</body>
+</html>
