@@ -1,7 +1,15 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import api from '../services/api';
+import { jwtDecode } from 'jwt-decode';
 
 interface User {
   id: string;
+  email: string;
+  role: string;
+}
+
+interface UserPayload {
+  sub: string;
   email: string;
   role: string;
 }
@@ -31,17 +39,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
   const login = async (email: string, password: string) => {
-    // TODO: Implement actual login logic with backend
-    console.log('Login attempt:', { email, password });
-    // Mock user for now
+    const response = await api.post<{ accessToken: string }>('/auth/login', { email, password });
+    const { accessToken } = response.data;
+    localStorage.setItem('accessToken', accessToken);
+    const decoded = jwtDecode<UserPayload>(accessToken);
     setUser({
-      id: '1',
-      email,
-      role: 'analyst'
+      id: decoded.sub,
+      email: decoded.email,
+      role: decoded.role
     });
   };
 
   const logout = () => {
+    localStorage.removeItem('accessToken');
     setUser(null);
   };
 
