@@ -3,13 +3,12 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
-import { Queue } from 'bull';
-import { getQueueToken } from '@nestjs/bull';
+import { EnrichmentQueueService } from '../src/enrichment/enrichment-queue.service';
 
 describe('Indicators E2E', () => {
   let app: INestApplication;
   let dataSource: DataSource;
-  let enrichmentQueue: Queue;
+  let enrichmentQueueService: EnrichmentQueueService;
   let accessToken: string;
 
   beforeAll(async () => {
@@ -18,14 +17,17 @@ describe('Indicators E2E', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+
+    // Abilita gli hooks per una chiusura pulita
+    app.enableShutdownHooks();
+
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
     );
     await app.init();
 
     dataSource = app.get(DataSource);
-    // Get the enrichment queue instance from the dependency container
-    enrichmentQueue = app.get<Queue>(getQueueToken('enrichment-queue'));
+    enrichmentQueueService = app.get(EnrichmentQueueService);
   });
 
   beforeEach(async () => {
@@ -59,21 +61,7 @@ describe('Indicators E2E', () => {
   });
 
   afterAll(async () => {
-    try {
-      // Close the enrichment queue connection gracefully
-      await enrichmentQueue.close();
-      // Give Redis time to close connections
-      await new Promise(resolve => setTimeout(resolve, 100));
-    } catch (error) {
-      console.warn('Failed to close queue:', error.message);
-    }
-    // Close the app with force flag
     await app.close();
-    // Force process exit after timeout
-    setTimeout(() => {
-      console.warn('Force exiting due to hanging connections');
-      process.exit(0);
-    }, 1000);
   });
 
   // =====================================
@@ -261,7 +249,7 @@ describe('Indicators E2E', () => {
       expect(response.body).toHaveProperty('type', ipIndicatorData.type);
 
       // Verify that a job was added to the enrichment queue
-      const jobs = await enrichmentQueue.getJobs(['wait']);
+      const jobs = await enrichmentQueueService.queue.getJobs(['wait']);
       expect(jobs).toHaveLength(1);
 
       // Verify job data contains correct indicator information
@@ -290,7 +278,7 @@ describe('Indicators E2E', () => {
       expect(response.body).toHaveProperty('type', domainIndicatorData.type);
 
       // Verify that NO job was added to the enrichment queue
-      const jobs = await enrichmentQueue.getJobs(['wait']);
+      const jobs = await enrichmentQueueService.queue.getJobs(['wait']);
       expect(jobs).toHaveLength(0);
     });
 
@@ -315,7 +303,7 @@ describe('Indicators E2E', () => {
       }
 
       // Verify that exactly 3 jobs were added to the queue
-      const jobs = await enrichmentQueue.getJobs(['wait']);
+      const jobs = await enrichmentQueueService.queue.getJobs(['wait']);
       expect(jobs).toHaveLength(3);
 
       // Verify each job has correct data
@@ -344,7 +332,7 @@ describe('Indicators E2E', () => {
       }
 
       // Verify that only IP indicators triggered job queuing (2 out of 5)
-      const jobs = await enrichmentQueue.getJobs(['wait']);
+      const jobs = await enrichmentQueueService.queue.getJobs(['wait']);
       expect(jobs).toHaveLength(2);
 
       // Verify the queued jobs are for IP indicators only

@@ -3,8 +3,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
-import { Queue } from 'bull';
-import { getQueueToken } from '@nestjs/bull';
 import nock from 'nock';
 import { Indicator } from '../src/indicators/entities/indicator.entity';
 import { User } from '../src/auth/entities/user.entity';
@@ -13,7 +11,6 @@ import { EnrichmentProcessor } from '../src/enrichment/enrichment.processor';
 describe('Enrichment Processor E2E', () => {
   let app: INestApplication;
   let dataSource: DataSource;
-  let enrichmentQueue: Queue;
   let enrichmentProcessor: EnrichmentProcessor;
 
   // Test data
@@ -36,14 +33,16 @@ describe('Enrichment Processor E2E', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+
+    // Abilita gli hooks per una chiusura pulita
+    app.enableShutdownHooks();
+
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
     );
     await app.init();
 
     dataSource = app.get(DataSource);
-    // Get the enrichment queue instance from the dependency container
-    enrichmentQueue = app.get<Queue>(getQueueToken('enrichment-queue'));
     // Get the enrichment processor instance from the dependency container
     enrichmentProcessor = app.get<EnrichmentProcessor>(EnrichmentProcessor);
   });
@@ -67,21 +66,7 @@ describe('Enrichment Processor E2E', () => {
   });
 
   afterAll(async () => {
-    try {
-      // Close the enrichment queue connection gracefully
-      await enrichmentQueue.close();
-      // Give Redis time to close connections
-      await new Promise(resolve => setTimeout(resolve, 100));
-    } catch (error) {
-      console.warn('Failed to close queue:', error.message);
-    }
-    // Close the app with force flag
     await app.close();
-    // Force process exit after timeout
-    setTimeout(() => {
-      console.warn('Force exiting due to hanging connections');
-      process.exit(0);
-    }, 1000);
   });
 
   // =====================================

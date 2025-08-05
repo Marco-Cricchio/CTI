@@ -3,8 +3,6 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
-import { getQueueToken } from '@nestjs/bull';
-import { Queue } from 'bull';
 
 describe('Authentication E2E', () => {
   let app: INestApplication;
@@ -16,6 +14,10 @@ describe('Authentication E2E', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+
+    // Abilita gli hooks per una chiusura pulita
+    app.enableShutdownHooks();
+
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
     );
@@ -33,22 +35,7 @@ describe('Authentication E2E', () => {
   });
 
   afterAll(async () => {
-    try {
-      // Get the enrichment queue instance and close it gracefully
-      const queue = app.get<Queue>(getQueueToken('enrichment-queue'));
-      await queue.close();
-      // Give Redis time to close connections
-      await new Promise(resolve => setTimeout(resolve, 100));
-    } catch (error) {
-      console.warn('Failed to close queue:', error.message);
-    }
-    // Close the app with force flag
     await app.close();
-    // Force process exit after timeout
-    setTimeout(() => {
-      console.warn('Force exiting due to hanging connections');
-      process.exit(0);
-    }, 1000);
   });
 
   // =====================================
