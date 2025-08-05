@@ -1,5 +1,16 @@
 // server/src/indicators/indicators.controller.ts
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Patch, Query, ValidationPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  UseGuards,
+  Patch,
+  Query,
+  ValidationPipe,
+} from '@nestjs/common';
 import { IndicatorsService } from './indicators.service';
 import { CreateIndicatorDto } from './dto/create-indicator.dto';
 import { UpdateIndicatorDto } from './dto/update-indicator.dto';
@@ -14,12 +25,17 @@ export class IndicatorsController {
   constructor(private readonly indicatorsService: IndicatorsService) {}
 
   @Post()
-  create(@Body() createIndicatorDto: CreateIndicatorDto, @GetUser() user: User) {
+  create(
+    @Body() createIndicatorDto: CreateIndicatorDto,
+    @GetUser() user: User,
+  ) {
     return this.indicatorsService.create(createIndicatorDto, user);
   }
 
   @Get()
-  findAll(@Query(new ValidationPipe({ transform: true })) queryDto: QueryIndicatorDto) {
+  findAll(
+    @Query(new ValidationPipe({ transform: true })) queryDto: QueryIndicatorDto,
+  ) {
     return this.indicatorsService.findAll(queryDto);
   }
 
@@ -34,7 +50,10 @@ export class IndicatorsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateIndicatorDto: UpdateIndicatorDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateIndicatorDto: UpdateIndicatorDto,
+  ) {
     return this.indicatorsService.update(id, updateIndicatorDto);
   }
 

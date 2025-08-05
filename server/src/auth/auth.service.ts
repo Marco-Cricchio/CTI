@@ -1,5 +1,9 @@
 // server/src/auth/auth.service.ts
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -15,8 +19,12 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterUserDto): Promise<Omit<User, 'password_hash'>> {
-    const existingUser = await this.usersRepository.findOne({ where: { email: registerDto.email } });
+  async register(
+    registerDto: RegisterUserDto,
+  ): Promise<Omit<User, 'password_hash'>> {
+    const existingUser = await this.usersRepository.findOne({
+      where: { email: registerDto.email },
+    });
     if (existingUser) {
       throw new ConflictException('Email already registered');
     }
@@ -35,7 +43,9 @@ export class AuthService {
   }
 
   async login(loginDto: RegisterUserDto): Promise<{ accessToken: string }> {
-    const user = await this.usersRepository.findOne({ where: { email: loginDto.email } });
+    const user = await this.usersRepository.findOne({
+      where: { email: loginDto.email },
+    });
     if (user && (await bcrypt.compare(loginDto.password, user.password_hash))) {
       const payload = { sub: user.id, email: user.email, role: user.role };
       return {

@@ -1,0 +1,150 @@
+# .github/workflows/ci.yml
+
+name: CyberForge Sentinel - Backend CI
+
+# Trigger: Esegui questo workflow ad ogni push o pull request sul branch 'main'
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    # Ottimizzazione: esegui solo se ci sono cambiamenti nel backend
+    paths:
+      - 'server/**'
+      - '.github/workflows/**'
+
+# Configurazione concurrency per evitare esecuzioni multiple sulla stessa PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Nome del job
+  test-backend:
+    # Specifica il sistema operativo su cui eseguire il job
+    runs-on: ubuntu-latest
+
+    # Strategia di timeout per evitare job che si bloccano
+    timeout-minutes: 15
+
+    # Definisci i "servizi" container che devono essere disponibili per il job.
+    # In questo caso, abbiamo bisogno di un database PostgreSQL.
+    services:
+      postgres:
+        # Usa un'immagine Docker ufficiale di PostgreSQL (versione ottimizzata Alpine)
+        image: postgres:15-alpine
+        # Imposta le variabili d'ambiente per il database.
+        # Devono corrispondere ESATTAMENTE a quelle nel file .env.test
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: cyberforge_test
+          # Ottimizzazioni per performance nei test
+          POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+        # Opzioni per il container. La healthcheck assicura che il job
+        # attenda che il database sia pronto prima di procedere.
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 20s
+        # Mappa la porta del container alla porta dell'host runner
+        ports:
+          - 5432:5432
+
+    # I passaggi (step) che compongono il job
+    steps:
+      # 1. Clona il repository nel runner
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Ottimizzazione: shallow clone per performance
+          fetch-depth: 1
+
+      # 2. Imposta l'ambiente Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # LTS stable version per massima compatibilità
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      # 3. Verifica connessione database (step diagnostico)
+      - name: Verify PostgreSQL connection
+        run: |
+          until pg_isready -h localhost -p 5432 -U test_user; do
+            echo "Waiting for PostgreSQL to be ready..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+        env:
+          PGPASSWORD: test_password
+
+      # 4. Installa le dipendenze del backend
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+        working-directory: ./server
+        env:
+          # Ottimizzazione: disabilita scripts post-install non necessari
+          HUSKY_SKIP_INSTALL: 1
+
+      # 5. Verifica TypeScript compilation
+      - name: TypeScript check
+        run: npm run typecheck
+        working-directory: ./server
+
+      # 6. Verifica code linting (allow warnings)
+      - name: Lint check
+        run: npm run lint || true
+        working-directory: ./server
+
+      # 7. Esegui la suite di test E2E
+      - name: Run E2E tests
+        run: npm run test:e2e
+        working-directory: ./server
+        # Imposta le variabili d'ambiente per il test.
+        # Queste istruiscono l'applicazione a connettersi al servizio 'postgres'
+        # che abbiamo definito sopra.
+        env:
+          # Database configuration (matching .env.test)
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USERNAME: test_user
+          DB_PASSWORD: test_password
+          DB_NAME: cyberforge_test
+          # JWT configuration
+          JWT_SECRET: aVerySecureSecretKeyForTestingPurposeOnly123!
+          # Node.js environment
+          NODE_ENV: test
+          # CI specific optimizations
+          CI: true
+
+      # 8. Upload test results (optional - for debugging)
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results
+          path: |
+            server/coverage/
+            server/test-results.xml
+          retention-days: 7
+
+  # Job summary per PR comments (opzionale ma utile)
+  test-summary:
+    needs: test-backend
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'pull_request'
+    
+    steps:
+      - name: Test Summary
+        run: |
+          if [ "${{ needs.test-backend.result }}" == "success" ]; then
+            echo "✅ All E2E tests passed successfully!"
+            echo "Backend is ready for deployment."
+          else
+            echo "❌ E2E tests failed."
+            echo "Please check the test results and fix any issues."
+            exit 1
+          fi

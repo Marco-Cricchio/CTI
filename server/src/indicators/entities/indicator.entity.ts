@@ -1,6 +1,13 @@
 // server/src/indicators/entities/indicator.entity.ts
 import { User } from '../../auth/entities/user.entity';
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+} from 'typeorm';
 
 export enum ThreatLevel {
   LOW = 'low',

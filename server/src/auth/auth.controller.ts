@@ -1,6 +1,13 @@
 // server/src/auth/auth.controller.ts
 // CORREZIONE: Aggiungi ValidationPipe e HttpCode agli import
-import { Controller, Post, Body, HttpCode, HttpStatus, ValidationPipe } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  ValidationPipe,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 
@@ -16,7 +23,8 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Body() loginDto: RegisterUserDto) { // Riutilizziamo il DTO per semplicità
+  login(@Body() loginDto: RegisterUserDto) {
+    // Riutilizziamo il DTO per semplicità
     return this.authService.login(loginDto);
   }
 }

@@ -5,7 +5,9 @@ import { User } from '../auth/entities/user.entity';
 import { Indicator } from '../indicators/entities/indicator.entity';
 
 export const typeOrmAsyncConfig = {
-  useFactory: async (configService: ConfigService): Promise<TypeOrmModuleOptions> => {
+  useFactory: async (
+    configService: ConfigService,
+  ): Promise<TypeOrmModuleOptions> => {
     return {
       type: 'postgres',
       url: configService.get<string>('DATABASE_URL'),

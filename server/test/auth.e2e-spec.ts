@@ -14,7 +14,9 @@ describe('Authentication E2E', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
+    );
     await app.init();
 
     dataSource = app.get(DataSource);
@@ -22,7 +24,9 @@ describe('Authentication E2E', () => {
 
   beforeEach(async () => {
     // Pulisce le tabelle prima di ogni test per garantire l'isolamento
-    await dataSource.query('TRUNCATE TABLE "indicators" RESTART IDENTITY CASCADE');
+    await dataSource.query(
+      'TRUNCATE TABLE "indicators" RESTART IDENTITY CASCADE',
+    );
     await dataSource.query('TRUNCATE TABLE "users" RESTART IDENTITY CASCADE');
   });
 
@@ -38,7 +42,7 @@ describe('Authentication E2E', () => {
     it('should register a new user successfully', async () => {
       const registerDto = {
         email: 'test@cyberforge.com',
-        password: 'securepassword123'
+        password: 'securepassword123',
       };
 
       const response = await request(app.getHttpServer())
@@ -52,7 +56,7 @@ describe('Authentication E2E', () => {
       expect(response.body).toHaveProperty('role', 'analyst'); // Default role
       expect(response.body).toHaveProperty('created_at');
       expect(response.body).toHaveProperty('updated_at');
-      
+
       // Verifica che NON contenga password_hash per sicurezza
       expect(response.body).not.toHaveProperty('password_hash');
     });
@@ -60,7 +64,7 @@ describe('Authentication E2E', () => {
     it('should return 409 when registering user with existing email', async () => {
       const registerDto = {
         email: 'existing@cyberforge.com',
-        password: 'password123'
+        password: 'password123',
       };
 
       // Prima registrazione - deve andare a buon fine
@@ -75,7 +79,10 @@ describe('Authentication E2E', () => {
         .send(registerDto)
         .expect(409);
 
-      expect(response.body).toHaveProperty('message', 'Email already registered');
+      expect(response.body).toHaveProperty(
+        'message',
+        'Email already registered',
+      );
       expect(response.body).toHaveProperty('error', 'Conflict');
       expect(response.body).toHaveProperty('statusCode', 409);
     });
@@ -83,7 +90,7 @@ describe('Authentication E2E', () => {
     it('should return 400 when registering with invalid data', async () => {
       const invalidData = {
         email: 'invalid-email',
-        password: 'short'
+        password: 'short',
       };
 
       const response = await request(app.getHttpServer())
@@ -94,14 +101,14 @@ describe('Authentication E2E', () => {
       expect(response.body).toHaveProperty('message');
       expect(response.body).toHaveProperty('error', 'Bad Request');
       expect(response.body).toHaveProperty('statusCode', 400);
-      
+
       // Verifica che ci siano errori di validazione
       expect(Array.isArray(response.body.message)).toBe(true);
     });
 
     it('should return 400 when email is missing', async () => {
       const incompleteData = {
-        password: 'validpassword123'
+        password: 'validpassword123',
       };
 
       await request(app.getHttpServer())
@@ -112,7 +119,7 @@ describe('Authentication E2E', () => {
 
     it('should return 400 when password is missing', async () => {
       const incompleteData = {
-        email: 'test@cyberforge.com'
+        email: 'test@cyberforge.com',
       };
 
       await request(app.getHttpServer())
@@ -138,7 +145,7 @@ describe('Authentication E2E', () => {
     it('should login successfully with correct credentials', async () => {
       const credentials = {
         email: 'login@cyberforge.com',
-        password: 'correctpassword123'
+        password: 'correctpassword123',
       };
 
       // Prima registriamo l'utente
@@ -154,7 +161,7 @@ describe('Authentication E2E', () => {
       expect(response.body).toHaveProperty('accessToken');
       expect(typeof response.body.accessToken).toBe('string');
       expect(response.body.accessToken.length).toBeGreaterThan(0);
-      
+
       // Verifica che il token JWT sia ben formato (tre parti separate da punti)
       const tokenParts = response.body.accessToken.split('.');
       expect(tokenParts).toHaveLength(3);
@@ -163,7 +170,7 @@ describe('Authentication E2E', () => {
     it('should return 401 when login with wrong password', async () => {
       const userCredentials = {
         email: 'wrongpass@cyberforge.com',
-        password: 'correctpassword123'
+        password: 'correctpassword123',
       };
 
       // Registriamo l'utente con la password corretta
@@ -172,7 +179,7 @@ describe('Authentication E2E', () => {
       // Tentiamo il login con password sbagliata
       const wrongCredentials = {
         email: userCredentials.email,
-        password: 'wrongpassword456'
+        password: 'wrongpassword456',
       };
 
       const response = await request(app.getHttpServer())
@@ -180,7 +187,10 @@ describe('Authentication E2E', () => {
         .send(wrongCredentials)
         .expect(401);
 
-      expect(response.body).toHaveProperty('message', 'Please check your login credentials');
+      expect(response.body).toHaveProperty(
+        'message',
+        'Please check your login credentials',
+      );
       expect(response.body).toHaveProperty('error', 'Unauthorized');
       expect(response.body).toHaveProperty('statusCode', 401);
     });
@@ -188,7 +198,7 @@ describe('Authentication E2E', () => {
     it('should return 401 when login with non-existing email', async () => {
       const nonExistingCredentials = {
         email: 'nonexisting@cyberforge.com',
-        password: 'anypassword123'
+        password: 'anypassword123',
       };
 
       const response = await request(app.getHttpServer())
@@ -196,7 +206,10 @@ describe('Authentication E2E', () => {
         .send(nonExistingCredentials)
         .expect(401);
 
-      expect(response.body).toHaveProperty('message', 'Please check your login credentials');
+      expect(response.body).toHaveProperty(
+        'message',
+        'Please check your login credentials',
+      );
       expect(response.body).toHaveProperty('error', 'Unauthorized');
       expect(response.body).toHaveProperty('statusCode', 401);
     });
@@ -204,7 +217,7 @@ describe('Authentication E2E', () => {
     it('should return 400 when login data is invalid', async () => {
       const invalidData = {
         email: 'invalid-email-format',
-        password: 'short'
+        password: 'short',
       };
 
       await request(app.getHttpServer())
@@ -224,7 +237,7 @@ describe('Authentication E2E', () => {
       const indicatorData = {
         value: '192.168.1.1',
         type: 'ip',
-        threat_level: 'high'
+        threat_level: 'high',
       };
 
       const response = await request(app.getHttpServer())
@@ -238,11 +251,11 @@ describe('Authentication E2E', () => {
 
     it('should return 401 when accessing protected endpoint with invalid token', async () => {
       const invalidToken = 'invalid.jwt.token';
-      
+
       const indicatorData = {
         value: 'malicious.com',
         type: 'domain',
-        threat_level: 'critical'
+        threat_level: 'critical',
       };
 
       const response = await request(app.getHttpServer())
@@ -257,7 +270,7 @@ describe('Authentication E2E', () => {
 
     it('should return 401 when accessing protected endpoint with malformed token', async () => {
       const malformedToken = 'this-is-not-a-valid-jwt';
-      
+
       const response = await request(app.getHttpServer())
         .get('/indicators')
         .set('Authorization', `Bearer ${malformedToken}`)
@@ -269,8 +282,9 @@ describe('Authentication E2E', () => {
 
     it('should return 401 when accessing protected endpoint with expired token', async () => {
       // Token JWT fittizio già scaduto (con exp nel passato)
-      const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJleHAiOjE2MjgwMDAwMDB9.invalid';
-      
+      const expiredToken =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJleHAiOjE2MjgwMDAwMDB9.invalid';
+
       const response = await request(app.getHttpServer())
         .get('/indicators/stats')
         .set('Authorization', `Bearer ${expiredToken}`)
@@ -283,7 +297,7 @@ describe('Authentication E2E', () => {
       // Registriamo un utente e facciamo login per ottenere un token valido
       const credentials = {
         email: 'validtoken@cyberforge.com',
-        password: 'validpassword123'
+        password: 'validpassword123',
       };
 
       // Registrazione

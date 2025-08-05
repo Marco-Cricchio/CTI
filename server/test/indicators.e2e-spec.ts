@@ -15,7 +15,9 @@ describe('Indicators E2E', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
+    );
     await app.init();
 
     dataSource = app.get(DataSource);
@@ -23,13 +25,15 @@ describe('Indicators E2E', () => {
 
   beforeEach(async () => {
     // Pulisce le tabelle prima di ogni test per garantire l'isolamento
-    await dataSource.query('TRUNCATE TABLE "indicators" RESTART IDENTITY CASCADE');
+    await dataSource.query(
+      'TRUNCATE TABLE "indicators" RESTART IDENTITY CASCADE',
+    );
     await dataSource.query('TRUNCATE TABLE "users" RESTART IDENTITY CASCADE');
 
     // Crea un utente e ottiene il token di accesso per ogni test
     const credentials = {
       email: 'test@cyberforge.com',
-      password: 'testpassword123'
+      password: 'testpassword123',
     };
 
     // Registrazione utente
@@ -60,7 +64,7 @@ describe('Indicators E2E', () => {
       const indicatorData = {
         value: '192.168.1.1',
         type: 'ip',
-        threat_level: 'high'
+        threat_level: 'high',
       };
 
       const response = await request(app.getHttpServer())
@@ -73,24 +77,34 @@ describe('Indicators E2E', () => {
       expect(response.body).toHaveProperty('id');
       expect(response.body).toHaveProperty('value', indicatorData.value);
       expect(response.body).toHaveProperty('type', indicatorData.type);
-      expect(response.body).toHaveProperty('threat_level', indicatorData.threat_level);
+      expect(response.body).toHaveProperty(
+        'threat_level',
+        indicatorData.threat_level,
+      );
       expect(response.body).toHaveProperty('is_active', true);
       expect(response.body).toHaveProperty('first_seen');
       expect(response.body).toHaveProperty('last_seen');
-      
+
       // Verifica che la relazione created_by sia popolata
       expect(response.body).toHaveProperty('created_by');
       expect(response.body.created_by).toHaveProperty('id');
-      expect(response.body.created_by).toHaveProperty('email', 'test@cyberforge.com');
+      expect(response.body.created_by).toHaveProperty(
+        'email',
+        'test@cyberforge.com',
+      );
       expect(response.body.created_by).toHaveProperty('role', 'analyst');
     });
 
     it('should create indicator with different types and threat levels', async () => {
       const testCases = [
         { value: 'malicious.com', type: 'domain', threat_level: 'critical' },
-        { value: 'https://malicious.com/path', type: 'url', threat_level: 'medium' },
+        {
+          value: 'https://malicious.com/path',
+          type: 'url',
+          threat_level: 'medium',
+        },
         { value: 'sha256:abcd1234...', type: 'file_hash', threat_level: 'low' },
-        { value: 'attacker@evil.com', type: 'email', threat_level: 'high' }
+        { value: 'attacker@evil.com', type: 'email', threat_level: 'high' },
       ];
 
       for (const indicatorData of testCases) {
@@ -110,7 +124,7 @@ describe('Indicators E2E', () => {
       const invalidData = {
         value: '192.168.1.1',
         type: 'invalid_type',
-        threat_level: 'high'
+        threat_level: 'high',
       };
 
       const response = await request(app.getHttpServer())
@@ -129,7 +143,7 @@ describe('Indicators E2E', () => {
       const invalidData = {
         value: '192.168.1.1',
         type: 'ip',
-        threat_level: 'invalid_level'
+        threat_level: 'invalid_level',
       };
 
       const response = await request(app.getHttpServer())
@@ -147,7 +161,7 @@ describe('Indicators E2E', () => {
       const invalidData = {
         value: '',
         type: 'ip',
-        threat_level: 'high'
+        threat_level: 'high',
       };
 
       await request(app.getHttpServer())
@@ -159,7 +173,7 @@ describe('Indicators E2E', () => {
       // Test con value completamente mancante
       const missingValueData = {
         type: 'ip',
-        threat_level: 'high'
+        threat_level: 'high',
       };
 
       await request(app.getHttpServer())
@@ -173,7 +187,7 @@ describe('Indicators E2E', () => {
       const indicatorData = {
         value: '192.168.1.1',
         type: 'ip',
-        threat_level: 'high'
+        threat_level: 'high',
       };
 
       const response = await request(app.getHttpServer())
@@ -189,7 +203,7 @@ describe('Indicators E2E', () => {
       const indicatorData = {
         value: '192.168.1.1',
         type: 'ip',
-        threat_level: 'high'
+        threat_level: 'high',
       };
 
       const response = await request(app.getHttpServer())
@@ -225,7 +239,7 @@ describe('Indicators E2E', () => {
       const testIndicators = [
         { value: '192.168.1.1', type: 'ip', threat_level: 'high' },
         { value: 'malicious.com', type: 'domain', threat_level: 'critical' },
-        { value: 'attacker@evil.com', type: 'email', threat_level: 'medium' }
+        { value: 'attacker@evil.com', type: 'email', threat_level: 'medium' },
       ];
 
       // Crea gli indicatori
@@ -269,7 +283,7 @@ describe('Indicators E2E', () => {
           .send({
             value: `192.168.1.${i}`,
             type: 'ip',
-            threat_level: 'medium'
+            threat_level: 'medium',
           })
           .expect(201);
       }
@@ -299,7 +313,7 @@ describe('Indicators E2E', () => {
         { value: '192.168.1.1', type: 'ip', threat_level: 'high' },
         { value: '192.168.1.2', type: 'ip', threat_level: 'medium' },
         { value: 'malicious.com', type: 'domain', threat_level: 'critical' },
-        { value: 'evil.com', type: 'domain', threat_level: 'high' }
+        { value: 'evil.com', type: 'domain', threat_level: 'high' },
       ];
 
       for (const indicatorData of testIndicators) {
@@ -341,7 +355,7 @@ describe('Indicators E2E', () => {
         { value: '192.168.1.1', type: 'ip', threat_level: 'critical' },
         { value: '192.168.1.2', type: 'ip', threat_level: 'critical' },
         { value: 'malicious.com', type: 'domain', threat_level: 'high' },
-        { value: 'suspicious.com', type: 'domain', threat_level: 'medium' }
+        { value: 'suspicious.com', type: 'domain', threat_level: 'medium' },
       ];
 
       for (const indicatorData of testIndicators) {
@@ -385,7 +399,7 @@ describe('Indicators E2E', () => {
       const indicatorData = {
         value: 'malicious.com',
         type: 'domain',
-        threat_level: 'critical'
+        threat_level: 'critical',
       };
 
       const createResponse = await request(app.getHttpServer())
@@ -405,7 +419,10 @@ describe('Indicators E2E', () => {
       expect(response.body).toHaveProperty('id', indicatorId);
       expect(response.body).toHaveProperty('value', indicatorData.value);
       expect(response.body).toHaveProperty('type', indicatorData.type);
-      expect(response.body).toHaveProperty('threat_level', indicatorData.threat_level);
+      expect(response.body).toHaveProperty(
+        'threat_level',
+        indicatorData.threat_level,
+      );
       expect(response.body).toHaveProperty('is_active', true);
       expect(response.body).toHaveProperty('created_by');
     });
@@ -445,7 +462,7 @@ describe('Indicators E2E', () => {
       const originalData = {
         value: '192.168.1.1',
         type: 'ip',
-        threat_level: 'medium'
+        threat_level: 'medium',
       };
 
       const createResponse = await request(app.getHttpServer())
@@ -459,7 +476,7 @@ describe('Indicators E2E', () => {
       // Aggiorna l'indicatore
       const updateData = {
         threat_level: 'critical',
-        value: '192.168.1.100'
+        value: '192.168.1.100',
       };
 
       const response = await request(app.getHttpServer())
@@ -471,7 +488,10 @@ describe('Indicators E2E', () => {
       expect(response.body).toHaveProperty('id', indicatorId);
       expect(response.body).toHaveProperty('value', updateData.value);
       expect(response.body).toHaveProperty('type', originalData.type); // Non modificato
-      expect(response.body).toHaveProperty('threat_level', updateData.threat_level);
+      expect(response.body).toHaveProperty(
+        'threat_level',
+        updateData.threat_level,
+      );
       expect(response.body).toHaveProperty('is_active', true);
     });
 
@@ -480,7 +500,7 @@ describe('Indicators E2E', () => {
       const originalData = {
         value: 'suspicious.com',
         type: 'domain',
-        threat_level: 'low'
+        threat_level: 'low',
       };
 
       const createResponse = await request(app.getHttpServer())
@@ -528,7 +548,7 @@ describe('Indicators E2E', () => {
         .send({
           value: '192.168.1.1',
           type: 'ip',
-          threat_level: 'medium'
+          threat_level: 'medium',
         })
         .expect(201);
 
@@ -537,7 +557,7 @@ describe('Indicators E2E', () => {
       // Tenta aggiornamento con dati invalidi
       const invalidUpdateData = {
         threat_level: 'invalid_level',
-        type: 'invalid_type'
+        type: 'invalid_type',
       };
 
       const response = await request(app.getHttpServer())
@@ -575,7 +595,7 @@ describe('Indicators E2E', () => {
       const indicatorData = {
         value: 'tobedeteted.com',
         type: 'domain',
-        threat_level: 'high'
+        threat_level: 'high',
       };
 
       const createResponse = await request(app.getHttpServer())
@@ -608,13 +628,13 @@ describe('Indicators E2E', () => {
       const indicator1Data = {
         value: '192.168.1.1',
         type: 'ip',
-        threat_level: 'high'
+        threat_level: 'high',
       };
 
       const indicator2Data = {
         value: '192.168.1.2',
         type: 'ip',
-        threat_level: 'medium'
+        threat_level: 'medium',
       };
 
       const create1Response = await request(app.getHttpServer())
@@ -690,7 +710,7 @@ describe('Indicators E2E', () => {
         { value: '192.168.1.1', type: 'ip', threat_level: 'critical' },
         { value: '192.168.1.2', type: 'ip', threat_level: 'critical' },
         { value: 'malicious.com', type: 'domain', threat_level: 'high' },
-        { value: 'suspicious.com', type: 'domain', threat_level: 'medium' }
+        { value: 'suspicious.com', type: 'domain', threat_level: 'medium' },
       ];
 
       for (const indicatorData of testIndicators) {

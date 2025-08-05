@@ -23,12 +23,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: string; email: string }): Promise<Omit<User, 'password_hash'>> {
-    const user = await this.usersRepository.findOne({ where: { id: payload.sub } });
+  async validate(payload: {
+    sub: string;
+    email: string;
+  }): Promise<Omit<User, 'password_hash'>> {
+    const user = await this.usersRepository.findOne({
+      where: { id: payload.sub },
+    });
     if (!user) {
       throw new UnauthorizedException();
     }
-    
+
     // CORREZIONE 2: Restituisci un nuovo oggetto senza la password hash.
     const { password_hash, ...result } = user;
     return result;
