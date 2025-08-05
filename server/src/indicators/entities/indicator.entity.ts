@@ -49,4 +49,23 @@ export class Indicator {
 
   @UpdateDateColumn()
   last_seen: Date;
+
+  // AbuseIPDB enrichment fields
+  @Column({ type: 'varchar', nullable: true })
+  country_code: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  isp: string | null;
+
+  @Column({ type: 'integer', nullable: true })
+  abuse_score: number | null;
+
+  @Column({ type: 'text', nullable: true })
+  domain_usage: string | null; // Per memorizzare un riassunto dei domini associati
+
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  latitude: number | null;
+
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
+  longitude: number | null;
 }

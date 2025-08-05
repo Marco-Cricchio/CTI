@@ -459,8 +459,6 @@ export class IndicatorsController {
 
 ---
 
----
-
 ## 9. Repository Information
 
 ### Repository URL
