@@ -1,8 +1,11 @@
 // server/src/indicators/indicators.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan } from 'typeorm';
-import { Indicator, ThreatLevel } from './entities/indicator.entity';
+import { InjectQueue } from '@nestjs/bull';
+import type { Repository } from 'typeorm';
+import { MoreThan } from 'typeorm';
+import type { Queue } from 'bull';
+import { Indicator, ThreatLevel, IndicatorType } from './entities/indicator.entity';
 import { CreateIndicatorDto } from './dto/create-indicator.dto';
 import { UpdateIndicatorDto } from './dto/update-indicator.dto';
 import { QueryIndicatorDto } from './dto/query-indicator.dto';
@@ -15,6 +18,7 @@ export class IndicatorsService {
     private indicatorsRepository: Repository<Indicator>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectQueue('enrichment-queue') private enrichmentQueue: Queue,
   ) {}
 
   async create(
@@ -31,6 +35,20 @@ export class IndicatorsService {
     });
 
     const savedIndicator = await this.indicatorsRepository.save(indicator);
+
+    // Se l'indicatore è un IP, aggiungi un job alla coda per l'arricchimento
+    if (savedIndicator.type === IndicatorType.IP) {
+      try {
+        await this.enrichmentQueue.add('enrich-ip', {
+          indicatorId: savedIndicator.id,
+          ipAddress: savedIndicator.value,
+        });
+        console.log(`Enrichment job queued for IP: ${savedIndicator.value}`);
+      } catch (error) {
+        console.error(`Failed to queue enrichment job for IP ${savedIndicator.value}:`, error.message);
+        // Non blocchiamo la creazione dell'indicatore se la coda fallisce
+      }
+    }
 
     // Ricarica l'indicatore con l'eager loading per ottenere l'utente completo
     const indicatorWithUser = await this.indicatorsRepository.findOne({
