@@ -13,11 +13,11 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
   if (!isOpen) return null;
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.overlay} onClick={onClose} data-cy="modal-overlay">
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()} data-cy="modal">
         <div className={styles.header}>
           <h2>{title}</h2>
-          <button onClick={onClose} className={styles.closeButton}>×</button>
+          <button onClick={onClose} className={styles.closeButton} data-cy="modal-close-button">×</button>
         </div>
         <div className={styles.content}>
           {children}

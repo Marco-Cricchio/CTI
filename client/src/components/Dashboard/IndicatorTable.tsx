@@ -88,11 +88,11 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
 
   if (loading) return <div className={styles.container}>Loading indicators...</div>;
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-cy="indicator-table">
       <div className={styles.tableHeader}>
         <h3 className={styles.title}>Latest Indicators</h3>
         <div className={styles.filters}>
-          <select name="type" value={filters.type} onChange={handleFilterChange}>
+          <select name="type" value={filters.type} onChange={handleFilterChange} data-cy="filter-type">
             <option value="">All Types</option>
             <option value="ip">IP</option>
             <option value="domain">Domain</option>
@@ -100,7 +100,7 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
             <option value="file_hash">File Hash</option>
             <option value="email">Email</option>
           </select>
-          <select name="threat_level" value={filters.threat_level} onChange={handleFilterChange}>
+          <select name="threat_level" value={filters.threat_level} onChange={handleFilterChange} data-cy="filter-threat-level">
             <option value="">All Threat Levels</option>
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -123,7 +123,7 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
           <tbody>
             {/* AGGIUNGI UN CONTROLLO DI SICUREZZA PRIMA DEL MAP */}
             {Array.isArray(indicators) && indicators.map(indicator => (
-              <tr key={indicator.id} className={styles.row}>
+              <tr key={indicator.id} className={styles.row} data-cy={`indicator-row-${indicator.id}`}>
                 <td className={styles.value}>{indicator.value}</td>
                 <td className={styles.type}>{indicator.type}</td>
                 <td>
@@ -135,12 +135,14 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
                   <button
                     onClick={() => onEdit(indicator)}
                     className={styles.actionButton}
+                    data-cy={`edit-button-${indicator.id}`}
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(indicator.id)}
                     className={`${styles.actionButton} ${styles.deleteButton}`}
+                    data-cy={`delete-button-${indicator.id}`}
                   >
                     Delete
                   </button>

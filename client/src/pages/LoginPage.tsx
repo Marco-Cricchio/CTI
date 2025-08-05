@@ -26,7 +26,7 @@ export const LoginPage: React.FC = () => {
         <h1>CyberForge Sentinel</h1>
         <p className={styles.subtitle}>Threat Intelligence Platform</p>
         
-        <form onSubmit={handleLogin} className={styles.loginForm}>
+        <form onSubmit={handleLogin} className={styles.loginForm} data-cy="login-form">
           <div className={styles.formGroup}>
             <label htmlFor="email">Email</label>
             <input
@@ -36,6 +36,7 @@ export const LoginPage: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@cyberforge.local"
               required
+              data-cy="email-input"
             />
           </div>
           
@@ -48,6 +49,7 @@ export const LoginPage: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
+              data-cy="password-input"
             />
           </div>
           
@@ -55,6 +57,7 @@ export const LoginPage: React.FC = () => {
             type="submit" 
             className={styles.loginBtn}
             disabled={isLoading}
+            data-cy="login-button"
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>

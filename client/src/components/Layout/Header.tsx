@@ -10,9 +10,9 @@ export const Header = ({ onAddNew }: { onAddNew: () => void }) => {
       <div className={styles.headerContent}>
         <h1 className={styles.title}>Dashboard</h1>
         <div className={styles.userSection}>
-          <button onClick={onAddNew} className={styles.newButton}>+ New Indicator</button>
+          <button onClick={onAddNew} className={styles.newButton} data-cy="new-indicator-button">+ New Indicator</button>
           <span className={styles.welcome}>Welcome, {user?.email}</span>
-          <button onClick={logout} className={styles.logoutBtn}>
+          <button onClick={logout} className={styles.logoutBtn} data-cy="logout-button">
             Logout
           </button>
         </div>

@@ -60,7 +60,7 @@ export const AddIndicatorForm: React.FC<AddIndicatorFormProps> = ({ onSuccess, i
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
+    <form onSubmit={handleSubmit} className={styles.form} data-cy="indicator-form">
       <div className={styles.formGroup}>
         <label htmlFor="value">Indicator Value</label>
         <input
@@ -70,11 +70,12 @@ export const AddIndicatorForm: React.FC<AddIndicatorFormProps> = ({ onSuccess, i
           onChange={(e) => setValue(e.target.value)}
           placeholder="e.g., 1.2.3.4 or malicious.com"
           disabled={isSubmitting}
+          data-cy="indicator-form-value"
         />
       </div>
       <div className={styles.formGroup}>
         <label htmlFor="type">Type</label>
-        <select id="type" value={type} onChange={(e) => setType(e.target.value)} disabled={isSubmitting}>
+        <select id="type" value={type} onChange={(e) => setType(e.target.value)} disabled={isSubmitting} data-cy="indicator-form-type">
           <option value="ip">IP Address</option>
           <option value="domain">Domain</option>
           <option value="url">URL</option>
@@ -84,7 +85,7 @@ export const AddIndicatorForm: React.FC<AddIndicatorFormProps> = ({ onSuccess, i
       </div>
       <div className={styles.formGroup}>
         <label htmlFor="threat_level">Threat Level</label>
-        <select id="threat_level" value={threatLevel} onChange={(e) => setThreatLevel(e.target.value)} disabled={isSubmitting}>
+        <select id="threat_level" value={threatLevel} onChange={(e) => setThreatLevel(e.target.value)} disabled={isSubmitting} data-cy="indicator-form-threat-level">
           <option value="low">Low</option>
           <option value="medium">Medium</option>
           <option value="high">High</option>
@@ -92,7 +93,7 @@ export const AddIndicatorForm: React.FC<AddIndicatorFormProps> = ({ onSuccess, i
         </select>
       </div>
       <div className={styles.actions}>
-        <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
+        <button type="submit" className={styles.submitButton} disabled={isSubmitting} data-cy="indicator-form-submit">
           {isSubmitting ? 'Saving...' : (isEditMode ? 'Update Indicator' : 'Add Indicator')}
         </button>
       </div>
