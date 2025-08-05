@@ -7,6 +7,7 @@ import { typeOrmAsyncConfig } from './config/typeorm.config';
 import { AuthModule } from './auth.module'; // Importato una sola volta
 import { IndicatorsModule } from './indicators/indicators.module';
 import { EnrichmentModule } from './enrichment/enrichment.module';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { EnrichmentModule } from './enrichment/enrichment.module';
     AuthModule, // Presente una sola volta
     IndicatorsModule,
     EnrichmentModule,
+    TagsModule,
   ],
   controllers: [],
   providers: [],

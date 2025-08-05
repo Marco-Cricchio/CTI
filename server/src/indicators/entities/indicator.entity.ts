@@ -1,5 +1,6 @@
 // server/src/indicators/entities/indicator.entity.ts
 import { User } from '../../auth/entities/user.entity';
+import { Tag } from '../../tags/entities/tag.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,6 +8,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 
 export enum ThreatLevel {
@@ -68,4 +71,14 @@ export class Indicator {
 
   @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   longitude: number | null;
+
+  @ManyToMany(() => Tag, (tag) => tag.indicators, {
+    cascade: true, // Opzionale ma utile: permette di salvare i tag insieme all'indicatore
+  })
+  @JoinTable({
+    name: 'indicator_tags', // Nome della tabella di giunzione
+    joinColumn: { name: 'indicator_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'tag_id', referencedColumnName: 'id' },
+  })
+  tags: Tag[];
 }
