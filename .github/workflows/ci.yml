@@ -1,6 +1,6 @@
 # .github/workflows/ci.yml
 
-name: CyberForge Sentinel - Backend CI
+name: CyberForge Sentinel - Full Stack CI
 
 # Trigger: Esegui questo workflow ad ogni push o pull request sul branch 'main'
 on:
@@ -8,9 +8,10 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-    # Ottimizzazione: esegui solo se ci sono cambiamenti nel backend
+    # Esegui se ci sono cambiamenti nel backend, frontend, o nel workflow CI
     paths:
       - 'server/**'
+      - 'client/**'
       - '.github/workflows/**'
 
 # Configurazione concurrency per evitare esecuzioni multiple sulla stessa PR
@@ -131,20 +132,124 @@ jobs:
             server/test-results.xml
           retention-days: 7
 
+  # Job per test E2E del frontend con Cypress
+  test-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # 1. Clona il repository nel runner
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # 2. Imposta l'ambiente Node.js per il frontend
+      - name: Set up Node.js for Frontend
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # LTS stable version per massima compatibilità
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      # 3. L'action ufficiale di Cypress che gestisce tutto il ciclo E2E:
+      # - Installa le dipendenze (npm ci)
+      # - Avvia il server di sviluppo (npm start)
+      # - Attende che il server sia pronto
+      # - Esegue i test (cypress run)
+      # - Carica screenshot e video in caso di fallimento
+      - name: Run Cypress E2E tests
+        uses: cypress-io/github-action@v6
+        with:
+          # Specifica la directory del progetto frontend
+          working-directory: client
+          # Comando per avviare il server di sviluppo React
+          start: npm start
+          # URL da attendere prima di eseguire i test
+          wait-on: 'http://localhost:3000'
+          # Timeout per wait-on (5 minuti)
+          wait-on-timeout: 300
+          # Browser da utilizzare per i test (Chrome è ottimo per la CI)
+          browser: chrome
+          # Ottimizzazioni per ambiente CI
+          record: false
+          config: video=false
+        env:
+          # Ottimizzazioni per CI
+          CI: true
+          # Disabilita colori per log più puliti
+          NO_COLOR: 1
+
+      # 4. Upload dei risultati in caso di fallimento
+      - name: Upload Cypress screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: client/cypress/screenshots
+          retention-days: 7
+
+      - name: Upload Cypress videos
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-videos
+          path: client/cypress/videos
+          retention-days: 7
+
   # Job summary per PR comments (opzionale ma utile)
   test-summary:
-    needs: test-backend
+    needs: [test-backend, test-frontend]
     runs-on: ubuntu-latest
     if: always() && github.event_name == 'pull_request'
     
     steps:
-      - name: Test Summary
+      - name: Full Stack Test Summary
         run: |
-          if [ "${{ needs.test-backend.result }}" == "success" ]; then
-            echo "✅ All E2E tests passed successfully!"
-            echo "Backend is ready for deployment."
+          backend_result="${{ needs.test-backend.result }}"
+          frontend_result="${{ needs.test-frontend.result }}"
+          
+          echo "## 🧪 CyberForge Sentinel - Test Results Summary"
+          echo ""
+          
+          # Backend test results
+          if [ "$backend_result" == "success" ]; then
+            echo "✅ **Backend Tests:** All API E2E tests passed successfully!"
+          elif [ "$backend_result" == "failure" ]; then
+            echo "❌ **Backend Tests:** API E2E tests failed."
+          elif [ "$backend_result" == "skipped" ]; then
+            echo "⏭️ **Backend Tests:** Skipped (no backend changes detected)."
           else
-            echo "❌ E2E tests failed."
-            echo "Please check the test results and fix any issues."
+            echo "⚠️ **Backend Tests:** $backend_result"
+          fi
+          
+          # Frontend test results  
+          if [ "$frontend_result" == "success" ]; then
+            echo "✅ **Frontend Tests:** All Cypress E2E tests passed successfully!"
+          elif [ "$frontend_result" == "failure" ]; then
+            echo "❌ **Frontend Tests:** Cypress E2E tests failed."
+          elif [ "$frontend_result" == "skipped" ]; then
+            echo "⏭️ **Frontend Tests:** Skipped (no frontend changes detected)."
+          else
+            echo "⚠️ **Frontend Tests:** $frontend_result"
+          fi
+          
+          echo ""
+          
+          # Overall status
+          if [ "$backend_result" == "success" ] && [ "$frontend_result" == "success" ]; then
+            echo "🎉 **Overall Status:** All tests passed! Ready for deployment."
+            exit 0
+          elif [ "$backend_result" == "skipped" ] && [ "$frontend_result" == "success" ]; then
+            echo "✅ **Overall Status:** Frontend tests passed, backend skipped."
+            exit 0
+          elif [ "$backend_result" == "success" ] && [ "$frontend_result" == "skipped" ]; then
+            echo "✅ **Overall Status:** Backend tests passed, frontend skipped."
+            exit 0
+          elif [ "$backend_result" == "skipped" ] && [ "$frontend_result" == "skipped" ]; then
+            echo "⏭️ **Overall Status:** No changes requiring tests detected."
+            exit 0
+          else
+            echo "❌ **Overall Status:** Some tests failed. Please check the results and fix any issues."
             exit 1
           fi
