@@ -30,15 +30,21 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
 
   const fetchIndicators = useCallback(async () => {
     setLoading(true);
+
+    // CORREZIONE: Costruisci i parametri dinamicamente
+    const params: any = {
+      page: currentPage,
+      limit: itemsPerPage,
+    };
+    if (filters.type) {
+      params.type = filters.type;
+    }
+    if (filters.threat_level) {
+      params.threat_level = filters.threat_level;
+    }
+
     try {
-      const response = await api.get('/indicators', {
-        params: {
-          page: currentPage,
-          limit: itemsPerPage,
-          ...filters,
-        },
-      });
-      // AGGIUNGI UN CONTROLLO: se response.data.data non esiste, usa un array vuoto
+      const response = await api.get('/indicators', { params }); // Usa l'oggetto params costruito
       setIndicators(response.data.data || []);
       setTotalItems(response.data.total || 0);
     } catch (err) {
