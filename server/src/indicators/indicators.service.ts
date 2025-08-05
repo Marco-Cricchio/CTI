@@ -26,7 +26,14 @@ export class IndicatorsService {
       ...createIndicatorDto,
       created_by: userReference,
     });
-    return this.indicatorsRepository.save(indicator);
+    
+    const savedIndicator = await this.indicatorsRepository.save(indicator);
+    
+    // Ricarica l'indicatore con l'eager loading per ottenere l'utente completo
+    return this.indicatorsRepository.findOne({ 
+      where: { id: savedIndicator.id },
+      relations: ['created_by']
+    });
   }
 
   async findAll(queryDto: QueryIndicatorDto): Promise<{ data: Indicator[], total: number }> {
@@ -59,7 +66,10 @@ export class IndicatorsService {
   }
 
   async findOne(id: string): Promise<Indicator> {
-    const indicator = await this.indicatorsRepository.findOne({ where: { id, is_active: true } });
+    const indicator = await this.indicatorsRepository.findOne({ 
+      where: { id, is_active: true },
+      relations: ['created_by']
+    });
     if (!indicator) {
       throw new NotFoundException(`Indicator with ID "${id}" not found`);
     }
