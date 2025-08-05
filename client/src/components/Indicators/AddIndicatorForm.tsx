@@ -70,6 +70,7 @@ export const AddIndicatorForm: React.FC<AddIndicatorFormProps> = ({ onSuccess, i
           onChange={(e) => setValue(e.target.value)}
           placeholder="e.g., 1.2.3.4 or malicious.com"
           disabled={isSubmitting}
+          required
           data-cy="indicator-form-value"
         />
       </div>

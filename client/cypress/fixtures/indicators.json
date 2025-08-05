@@ -1,0 +1,63 @@
+{
+  "data": [
+    {
+      "id": "indicator-001",
+      "value": "192.168.1.100",
+      "type": "ip",
+      "threat_level": "high",
+      "is_active": true,
+      "first_seen": "2025-01-01T10:00:00.000Z",
+      "last_seen": "2025-01-05T15:30:00.000Z",
+      "created_by": {
+        "id": "user-123",
+        "email": "analyst@cyberforge.com",
+        "role": "analyst"
+      }
+    },
+    {
+      "id": "indicator-002", 
+      "value": "malicious.com",
+      "type": "domain",
+      "threat_level": "critical",
+      "is_active": true,
+      "first_seen": "2025-01-02T08:15:00.000Z",
+      "last_seen": "2025-01-05T12:45:00.000Z",
+      "created_by": {
+        "id": "user-123",
+        "email": "analyst@cyberforge.com",
+        "role": "analyst"
+      }
+    },
+    {
+      "id": "indicator-003",
+      "value": "https://evil-site.com/payload",
+      "type": "url", 
+      "threat_level": "medium",
+      "is_active": true,
+      "first_seen": "2025-01-03T14:20:00.000Z",
+      "last_seen": "2025-01-05T16:10:00.000Z",
+      "created_by": {
+        "id": "user-456",
+        "email": "security@cyberforge.com",
+        "role": "analyst"
+      }
+    },
+    {
+      "id": "indicator-004",
+      "value": "attacker@darkweb.com",
+      "type": "email",
+      "threat_level": "low",
+      "is_active": true,
+      "first_seen": "2025-01-04T09:30:00.000Z",
+      "last_seen": "2025-01-05T11:20:00.000Z",
+      "created_by": {
+        "id": "user-789",
+        "email": "threat-hunter@cyberforge.com",
+        "role": "analyst"
+      }
+    }
+  ],
+  "total": 4,
+  "page": 1,
+  "limit": 10
+}
