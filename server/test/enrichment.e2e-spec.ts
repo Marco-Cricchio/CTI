@@ -67,7 +67,21 @@ describe('Enrichment Processor E2E', () => {
   });
 
   afterAll(async () => {
+    try {
+      // Close the enrichment queue connection gracefully
+      await enrichmentQueue.close();
+      // Give Redis time to close connections
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } catch (error) {
+      console.warn('Failed to close queue:', error.message);
+    }
+    // Close the app with force flag
     await app.close();
+    // Force process exit after timeout
+    setTimeout(() => {
+      console.warn('Force exiting due to hanging connections');
+      process.exit(0);
+    }, 1000);
   });
 
   // =====================================
