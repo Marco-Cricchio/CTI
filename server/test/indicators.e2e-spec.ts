@@ -3,10 +3,13 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
+import { Queue } from 'bull';
+import { getQueueToken } from '@nestjs/bull';
 
 describe('Indicators E2E', () => {
   let app: INestApplication;
   let dataSource: DataSource;
+  let enrichmentQueue: Queue;
   let accessToken: string;
 
   beforeAll(async () => {
@@ -21,6 +24,8 @@ describe('Indicators E2E', () => {
     await app.init();
 
     dataSource = app.get(DataSource);
+    // Get the enrichment queue instance from the dependency container
+    enrichmentQueue = app.get<Queue>(getQueueToken('enrichment-queue'));
   });
 
   beforeEach(async () => {
@@ -29,6 +34,8 @@ describe('Indicators E2E', () => {
       'TRUNCATE TABLE "indicators" RESTART IDENTITY CASCADE',
     );
     await dataSource.query('TRUNCATE TABLE "users" RESTART IDENTITY CASCADE');
+
+    // Note: Queue cleanup removed as it was causing timeouts in test environment
 
     // Crea un utente e ottiene il token di accesso per ogni test
     const credentials = {
@@ -214,6 +221,125 @@ describe('Indicators E2E', () => {
 
       expect(response.body).toHaveProperty('message', 'Unauthorized');
       expect(response.body).toHaveProperty('statusCode', 401);
+    });
+
+    // =====================================
+    // ENRICHMENT JOB QUEUING TESTS
+    // =====================================
+
+    it('should queue enrichment job when creating IP indicator', async () => {
+      const ipIndicatorData = {
+        value: '8.8.8.8',
+        type: 'ip',
+        threat_level: 'medium',
+      };
+
+      // Create IP indicator
+      const response = await request(app.getHttpServer())
+        .post('/indicators')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(ipIndicatorData)
+        .expect(201);
+
+      // Verify indicator was created successfully
+      expect(response.body).toHaveProperty('id');
+      expect(response.body).toHaveProperty('value', ipIndicatorData.value);
+      expect(response.body).toHaveProperty('type', ipIndicatorData.type);
+
+      // Verify that a job was added to the enrichment queue
+      const jobs = await enrichmentQueue.getJobs(['wait']);
+      expect(jobs).toHaveLength(1);
+
+      // Verify job data contains correct indicator information
+      const job = jobs[0];
+      expect(job.data).toHaveProperty('indicatorId', response.body.id);
+      expect(job.data).toHaveProperty('ipAddress', ipIndicatorData.value);
+    });
+
+    it('should NOT queue enrichment job when creating non-IP indicator', async () => {
+      const domainIndicatorData = {
+        value: 'example.com',
+        type: 'domain',
+        threat_level: 'high',
+      };
+
+      // Create domain indicator
+      const response = await request(app.getHttpServer())
+        .post('/indicators')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(domainIndicatorData)
+        .expect(201);
+
+      // Verify indicator was created successfully
+      expect(response.body).toHaveProperty('id');
+      expect(response.body).toHaveProperty('value', domainIndicatorData.value);
+      expect(response.body).toHaveProperty('type', domainIndicatorData.type);
+
+      // Verify that NO job was added to the enrichment queue
+      const jobs = await enrichmentQueue.getJobs(['wait']);
+      expect(jobs).toHaveLength(0);
+    });
+
+    it('should queue multiple jobs for multiple IP indicators', async () => {
+      const ipIndicators = [
+        { value: '1.1.1.1', type: 'ip', threat_level: 'low' },
+        { value: '8.8.4.4', type: 'ip', threat_level: 'medium' },
+        { value: '9.9.9.9', type: 'ip', threat_level: 'high' },
+      ];
+
+      const createdIndicatorIds = [];
+
+      // Create multiple IP indicators
+      for (const indicatorData of ipIndicators) {
+        const response = await request(app.getHttpServer())
+          .post('/indicators')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send(indicatorData)
+          .expect(201);
+
+        createdIndicatorIds.push(response.body.id);
+      }
+
+      // Verify that exactly 3 jobs were added to the queue
+      const jobs = await enrichmentQueue.getJobs(['wait']);
+      expect(jobs).toHaveLength(3);
+
+      // Verify each job has correct data
+      jobs.forEach((job, index) => {
+        expect(job.data).toHaveProperty('indicatorId', createdIndicatorIds[index]);
+        expect(job.data).toHaveProperty('ipAddress', ipIndicators[index].value);
+      });
+    });
+
+    it('should handle mixed indicator types correctly for job queuing', async () => {
+      const mixedIndicators = [
+        { value: '192.168.1.100', type: 'ip', threat_level: 'medium' },
+        { value: 'malicious.com', type: 'domain', threat_level: 'high' },
+        { value: '10.0.0.1', type: 'ip', threat_level: 'low' },
+        { value: 'attacker@evil.com', type: 'email', threat_level: 'critical' },
+        { value: 'https://malicious.com/path', type: 'url', threat_level: 'high' },
+      ];
+
+      // Create indicators of mixed types
+      for (const indicatorData of mixedIndicators) {
+        await request(app.getHttpServer())
+          .post('/indicators')
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send(indicatorData)
+          .expect(201);
+      }
+
+      // Verify that only IP indicators triggered job queuing (2 out of 5)
+      const jobs = await enrichmentQueue.getJobs(['wait']);
+      expect(jobs).toHaveLength(2);
+
+      // Verify the queued jobs are for IP indicators only
+      const queuedIpAddresses = jobs.map(job => job.data.ipAddress);
+      expect(queuedIpAddresses).toContain('192.168.1.100');
+      expect(queuedIpAddresses).toContain('10.0.0.1');
+      expect(queuedIpAddresses).not.toContain('malicious.com');
+      expect(queuedIpAddresses).not.toContain('attacker@evil.com');
+      expect(queuedIpAddresses).not.toContain('https://malicious.com/path');
     });
   });
 
