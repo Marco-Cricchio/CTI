@@ -1,15 +1,9 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
-import api from '../../services/api';
+import { indicatorService } from '../../services/api';
+import { Indicator } from '../../types';
 import styles from './IndicatorTable.module.css';
 import { toast } from 'react-hot-toast';
 import { Pagination } from '../shared/Pagination';
-
-interface Indicator {
-  id: string;
-  value: string;
-  type: string;
-  threat_level: string;
-}
 
 export interface IndicatorTableHandles {
   refetch: () => void;
@@ -18,9 +12,10 @@ export interface IndicatorTableHandles {
 interface IndicatorTableProps {
   onDeleteSuccess: () => void;
   onEdit: (indicator: Indicator) => void;
+  onRowClick?: (indicator: Indicator) => void;
 }
 
-export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTableProps>(({ onDeleteSuccess, onEdit }, ref) => {
+export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTableProps>(({ onDeleteSuccess, onEdit, onRowClick }, ref) => {
   const [indicators, setIndicators] = useState<Indicator[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
@@ -44,12 +39,12 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
     }
 
     try {
-      const response = await api.get('/indicators', { params }); // Usa l'oggetto params costruito
-      setIndicators(response.data.data || []);
-      setTotalItems(response.data.total || 0);
+      const response = await indicatorService.getAll(params);
+      setIndicators(response.data || []);
+      setTotalItems(response.total || 0);
     } catch (err) {
       toast.error('Failed to fetch indicators.');
-      setIndicators([]); // In caso di errore, imposta un array vuoto
+      setIndicators([]);
       setTotalItems(0);
     } finally {
       setLoading(false);
@@ -69,10 +64,10 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
   const handleDelete = async (indicatorId: string) => {
     if (window.confirm('Are you sure you want to delete this indicator?')) {
       try {
-        await api.delete(`/indicators/${indicatorId}`);
+        await indicatorService.delete(indicatorId);
         toast.success('Indicator deleted successfully.');
         onDeleteSuccess();
-        fetchIndicators(); // Refresh current page
+        fetchIndicators();
       } catch (error) {
         console.error('Failed to delete indicator', error);
         toast.error('Failed to delete indicator.');
@@ -121,9 +116,13 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
             </tr>
           </thead>
           <tbody>
-            {/* AGGIUNGI UN CONTROLLO DI SICUREZZA PRIMA DEL MAP */}
             {Array.isArray(indicators) && indicators.map(indicator => (
-              <tr key={indicator.id} className={styles.row} data-cy={`indicator-row-${indicator.id}`}>
+              <tr 
+                key={indicator.id} 
+                className={`${styles.row} ${onRowClick ? styles.clickableRow : ''}`} 
+                data-cy={`indicator-row-${indicator.id}`}
+                onClick={() => onRowClick?.(indicator)}
+              >
                 <td className={styles.value}>{indicator.value}</td>
                 <td className={styles.type}>{indicator.type}</td>
                 <td>
@@ -133,14 +132,20 @@ export const IndicatorTable = forwardRef<IndicatorTableHandles, IndicatorTablePr
                 </td>
                 <td>
                   <button
-                    onClick={() => onEdit(indicator)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(indicator);
+                    }}
                     className={styles.actionButton}
                     data-cy={`edit-button-${indicator.id}`}
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(indicator.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(indicator.id);
+                    }}
                     className={`${styles.actionButton} ${styles.deleteButton}`}
                     data-cy={`delete-button-${indicator.id}`}
                   >

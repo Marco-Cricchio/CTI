@@ -1,0 +1,234 @@
+// client/src/components/Indicators/IndicatorDetailPanel.tsx
+import React, { useEffect, useState } from 'react';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { Indicator } from '../../types';
+import { indicatorService } from '../../services/api';
+import styles from './IndicatorDetailPanel.module.css';
+
+interface Props {
+  indicator: Indicator | null;
+  onClose: () => void;
+}
+
+export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) => {
+  const [detailedIndicator, setDetailedIndicator] = useState<Indicator | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchDetailedIndicator = async () => {
+      if (!indicator) {
+        setDetailedIndicator(null);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const detailed = await indicatorService.getById(indicator.id);
+        setDetailedIndicator(detailed);
+      } catch (error) {
+        console.error('Failed to fetch detailed indicator:', error);
+        setDetailedIndicator(indicator); // Fallback to basic data
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetailedIndicator();
+  }, [indicator]);
+
+  if (!indicator) {
+    return null;
+  }
+
+  const displayIndicator = detailedIndicator || indicator;
+
+  const getThreatLevelColor = (level: string) => {
+    const colors = {
+      low: 'var(--success-color)',
+      medium: 'var(--warning-color)',
+      high: 'var(--accent-orange)',
+      critical: 'var(--danger-color)',
+    };
+    return colors[level as keyof typeof colors] || 'var(--text-secondary)';
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <PanelGroup
+        direction="horizontal"
+        className={styles.panelContainer}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Panel defaultSize={100} minSize={30}>
+          <div className={styles.content}>
+            {/* Header */}
+            <div className={styles.header}>
+              <div className={styles.titleSection}>
+                <h2 className={styles.title}>
+                  {displayIndicator.value}
+                </h2>
+                <div className={styles.badges}>
+                  <span className={styles.typeBadge}>{displayIndicator.type.toUpperCase()}</span>
+                  <span 
+                    className={styles.threatBadge}
+                    style={{ 
+                      backgroundColor: getThreatLevelColor(displayIndicator.threat_level),
+                      color: 'white'
+                    }}
+                  >
+                    {displayIndicator.threat_level.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+              <button onClick={onClose} className={styles.closeButton}>
+                ✕
+              </button>
+            </div>
+
+            {loading && (
+              <div className={styles.loadingIndicator}>
+                Loading detailed information...
+              </div>
+            )}
+
+            {/* Basic Information Section */}
+            <section className={styles.section}>
+              <h3 className={styles.sectionTitle}>Basic Information</h3>
+              <div className={styles.infoGrid}>
+                <div className={styles.infoItem}>
+                  <label>IOC Value:</label>
+                  <span>{displayIndicator.value}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <label>Type:</label>
+                  <span>{displayIndicator.type}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <label>Threat Level:</label>
+                  <span style={{ color: getThreatLevelColor(displayIndicator.threat_level) }}>
+                    {displayIndicator.threat_level}
+                  </span>
+                </div>
+                <div className={styles.infoItem}>
+                  <label>Status:</label>
+                  <span className={displayIndicator.is_active ? styles.active : styles.inactive}>
+                    {displayIndicator.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <div className={styles.infoItem}>
+                  <label>First Seen:</label>
+                  <span>{formatDate(displayIndicator.first_seen)}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <label>Last Seen:</label>
+                  <span>{formatDate(displayIndicator.last_seen)}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <label>Created By:</label>
+                  <span>{displayIndicator.created_by?.email || 'Unknown'}</span>
+                </div>
+              </div>
+            </section>
+
+            {/* IP Enrichment Section */}
+            {displayIndicator.type === 'ip' && (
+              <section className={styles.section}>
+                <h3 className={styles.sectionTitle}>IP Intelligence Data</h3>
+                
+                {displayIndicator.country_code || displayIndicator.isp || displayIndicator.abuse_score !== null ? (
+                  <div className={styles.enrichmentGrid}>
+                    {displayIndicator.country_code && (
+                      <div className={styles.enrichmentItem}>
+                        <label>Country:</label>
+                        <span className={styles.countryCode}>
+                          {displayIndicator.country_code}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {displayIndicator.isp && (
+                      <div className={styles.enrichmentItem}>
+                        <label>ISP:</label>
+                        <span>{displayIndicator.isp}</span>
+                      </div>
+                    )}
+                    
+                    {displayIndicator.abuse_score !== null && (
+                      <div className={styles.enrichmentItem}>
+                        <label>Abuse Score:</label>
+                        <span className={styles.abuseScore}>
+                          {displayIndicator.abuse_score}%
+                          <div className={styles.scoreBar}>
+                            <div 
+                              className={styles.scoreProgress}
+                              style={{ 
+                                width: `${displayIndicator.abuse_score || 0}%`,
+                                backgroundColor: (displayIndicator.abuse_score || 0) > 75 ? 'var(--danger-color)' :
+                                                 (displayIndicator.abuse_score || 0) > 50 ? 'var(--accent-orange)' :
+                                                 (displayIndicator.abuse_score || 0) > 25 ? 'var(--warning-color)' :
+                                                 'var(--success-color)'
+                              }}
+                            />
+                          </div>
+                        </span>
+                      </div>
+                    )}
+                    
+                    {displayIndicator.domain_usage && (
+                      <div className={styles.enrichmentItem}>
+                        <label>Domain Usage:</label>
+                        <span>{displayIndicator.domain_usage}</span>
+                      </div>
+                    )}
+                    
+                    {(displayIndicator.latitude && displayIndicator.longitude) && (
+                      <div className={styles.enrichmentItem}>
+                        <label>Geolocation:</label>
+                        <span>
+                          {displayIndicator.latitude?.toFixed(4)}, {displayIndicator.longitude?.toFixed(4)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className={styles.noEnrichment}>
+                    <div className={styles.enrichmentPlaceholder}>
+                      <div className={styles.loadingIcon}>⏳</div>
+                      <p>IP enrichment data is being processed...</p>
+                      <small>This may take a few moments for new indicators</small>
+                    </div>
+                  </div>
+                )}
+
+                {/* Map Placeholder */}
+                {(displayIndicator.latitude && displayIndicator.longitude) ? (
+                  <div className={styles.mapSection}>
+                    <h4 className={styles.mapTitle}>Geographic Location</h4>
+                    <div className={styles.mapPlaceholder}>
+                      <div className={styles.mapCoordinates}>
+                        📍 {displayIndicator.latitude?.toFixed(4)}, {displayIndicator.longitude?.toFixed(4)}
+                      </div>
+                      <p>Interactive map coming soon</p>
+                    </div>
+                  </div>
+                ) : displayIndicator.type === 'ip' && (
+                  <div className={styles.mapSection}>
+                    <h4 className={styles.mapTitle}>Geographic Location</h4>
+                    <div className={styles.mapPlaceholder}>
+                      <p>Location data will appear here after enrichment</p>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+          </div>
+        </Panel>
+        <PanelResizeHandle className={styles.resizeHandle} />
+      </PanelGroup>
+    </div>
+  );
+};

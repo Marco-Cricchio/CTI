@@ -97,6 +97,14 @@
   transition: background-color 0.2s ease;
 }
 
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover {
+  background-color: var(--bg-tertiary);
+}
+
 .row:hover {
   background-color: var(--bg-tertiary);
 }

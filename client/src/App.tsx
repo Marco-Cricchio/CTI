@@ -7,9 +7,11 @@ import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import { MetricCard } from './components/Dashboard/MetricCard';
 import { IndicatorTable, IndicatorTableHandles } from './components/Dashboard/IndicatorTable';
+import { IndicatorDetailPanel } from './components/Indicators/IndicatorDetailPanel';
 import { Modal } from './components/shared/Modal';
 import { AddIndicatorForm } from './components/Indicators/AddIndicatorForm';
 import { useDashboardStats } from './hooks/useDashboardStats';
+import { Indicator } from './types';
 import layoutStyles from './components/Layout/Layout.module.css';
 import dashboardStyles from './components/Dashboard/Dashboard.module.css';
 import { Toaster } from 'react-hot-toast';
@@ -20,18 +22,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return user ? <>{children}</> : <Navigate to="/login" />;
 };
 
-interface Indicator { 
-  id: string; 
-  value: string; 
-  type: string; 
-  threat_level: string; 
-}
 
 // Componente per la pagina della Dashboard
 function DashboardPage() {
   const { stats, loading, refetch: refetchStats } = useDashboardStats();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [indicatorToEdit, setIndicatorToEdit] = useState<Indicator | null>(null);
+  const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
   const tableRef = useRef<IndicatorTableHandles>(null);
 
   const handleOpenAddModal = () => {
@@ -51,6 +48,14 @@ function DashboardPage() {
     refetchStats();
   };
 
+  const handleRowClick = (indicator: Indicator) => {
+    setSelectedIndicator(indicator);
+  };
+
+  const handleCloseDetailPanel = () => {
+    setSelectedIndicator(null);
+  };
+
   return (
     <>
       <div className={layoutStyles.appContainer}>
@@ -65,7 +70,12 @@ function DashboardPage() {
                 <MetricCard title="Active Investigations" value={loading ? '...' : stats?.activeInvestigations} />
                 <MetricCard title="Data Feeds" value={loading ? '...' : stats?.dataFeeds} />
               </div>
-              <IndicatorTable ref={tableRef} onDeleteSuccess={handleSuccess} onEdit={handleOpenEditModal} />
+              <IndicatorTable 
+                ref={tableRef} 
+                onDeleteSuccess={handleSuccess} 
+                onEdit={handleOpenEditModal}
+                onRowClick={handleRowClick}
+              />
             </div>
           </div>
         </main>
@@ -73,6 +83,10 @@ function DashboardPage() {
       <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setIndicatorToEdit(null); }} title={indicatorToEdit ? 'Edit Indicator' : 'Add New Indicator'}>
         <AddIndicatorForm onSuccess={handleSuccess} indicatorToEdit={indicatorToEdit} />
       </Modal>
+      <IndicatorDetailPanel 
+        indicator={selectedIndicator} 
+        onClose={handleCloseDetailPanel} 
+      />
     </>
   );
 }
