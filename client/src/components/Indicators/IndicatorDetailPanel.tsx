@@ -1,6 +1,7 @@
 // client/src/components/Indicators/IndicatorDetailPanel.tsx
 import React, { useEffect, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Indicator } from '../../types';
 import { indicatorService } from '../../services/api';
 import { IpGeolocationMap } from './IpGeolocationMap';
@@ -58,12 +59,37 @@ export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) =>
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <PanelGroup
-        direction="horizontal"
-        className={styles.panelContainer}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AnimatePresence>
+      {indicator && (
+        <>
+          {/* Animated Overlay */}
+          <motion.div
+            className={styles.overlay}
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          />
+
+          {/* Animated Panel */}
+          <motion.div
+            className={styles.panelContainer}
+            onClick={(e) => e.stopPropagation()}
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ 
+              type: 'spring', 
+              stiffness: 300, 
+              damping: 30,
+              mass: 0.8
+            }}
+          >
+            <PanelGroup
+              direction="horizontal"
+              className="h-full"
+            >
         <Panel defaultSize={100} minSize={30}>
           <div className={styles.content}>
             {/* Header */}
@@ -230,9 +256,12 @@ export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) =>
               </section>
             )}
           </div>
-        </Panel>
-        <PanelResizeHandle className={styles.resizeHandle} />
-      </PanelGroup>
-    </div>
+            </Panel>
+            <PanelResizeHandle className={styles.resizeHandle} />
+            </PanelGroup>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 };
