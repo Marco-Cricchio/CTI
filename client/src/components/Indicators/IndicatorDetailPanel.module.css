@@ -259,6 +259,14 @@
   font-weight: var(--font-light);
 }
 
+.mapContainer {
+  height: 250px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+}
+
 .mapPlaceholder {
   height: 200px;
   background-color: var(--bg-primary);

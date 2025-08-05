@@ -1,6 +1,9 @@
 /* Import Design System */
 @import url('./style-guide.css');
 
+/* Import Leaflet Map Styles */
+@import "leaflet/dist/leaflet.css";
+
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

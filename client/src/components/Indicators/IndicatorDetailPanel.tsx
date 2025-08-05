@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { Indicator } from '../../types';
 import { indicatorService } from '../../services/api';
+import { IpGeolocationMap } from './IpGeolocationMap';
 import styles from './IndicatorDetailPanel.module.css';
 
 interface Props {
@@ -204,15 +205,18 @@ export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) =>
                   </div>
                 )}
 
-                {/* Map Placeholder */}
+                {/* Interactive Map */}
                 {(displayIndicator.latitude && displayIndicator.longitude) ? (
                   <div className={styles.mapSection}>
                     <h4 className={styles.mapTitle}>Geographic Location</h4>
-                    <div className={styles.mapPlaceholder}>
-                      <div className={styles.mapCoordinates}>
-                        📍 {displayIndicator.latitude?.toFixed(4)}, {displayIndicator.longitude?.toFixed(4)}
-                      </div>
-                      <p>Interactive map coming soon</p>
+                    <div className={styles.mapContainer}>
+                      <IpGeolocationMap
+                        latitude={displayIndicator.latitude}
+                        longitude={displayIndicator.longitude}
+                        isp={displayIndicator.isp || undefined}
+                        countryCode={displayIndicator.country_code || undefined}
+                        ipAddress={displayIndicator.value}
+                      />
                     </div>
                   </div>
                 ) : displayIndicator.type === 'ip' && (
