@@ -1,6 +1,6 @@
 # CyberForge Sentinel - Development Guide
 
-**Progetto:** Piattaforma di Threat Intelligence per analisti di cybersecurity  
+**Progetto:** Piattaforma di Threat Intelligence per analisti di cybersicurezza  
 **Target:** CERT e team di sicurezza informatica  
 **Tecnologie:** React + TypeScript (Frontend), NestJS + TypeScript (Backend), PostgreSQL (Database)
 **Repository GitHub:** https://github.com/Marco-Cricchio/CTI
