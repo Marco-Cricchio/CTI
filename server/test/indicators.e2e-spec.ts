@@ -1049,4 +1049,53 @@ describe('Indicators E2E', () => {
       expect(response.body.tags[0].id).toBe(testTag1.id);
     });
   });
+
+  // =====================================
+  // IP ENRICHMENT TESTS (E2E)
+  // =====================================
+
+  // Funzione helper per attendere
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  describe('Indicator Enrichment (E2E)', () => {
+    it('should enrich an IP indicator after creation', async () => {
+      // Assicurati che la chiave API sia presente, altrimenti salta il test
+      if (!process.env.ABUSEIPDB_API_KEY) {
+        console.warn('Skipping enrichment test: ABUSEIPDB_API_KEY not set.');
+        return;
+      }
+
+      // 1. Crea un nuovo indicatore IP
+      const ipValue = '8.8.4.4'; // Usiamo un IP noto e non usato in altri test
+      const createResponse = await request(app.getHttpServer())
+        .post('/indicators')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          value: ipValue,
+          type: 'ip',
+          threat_level: 'low',
+        })
+        .expect(201);
+
+      const indicatorId = createResponse.body.id;
+      expect(indicatorId).toBeDefined();
+
+      // 2. Attendi che il processo in background (simulato) completi
+      // Aumentiamo l'attesa per dare tempo all'API esterna e alla coda di processare
+      await sleep(5000); // 5 secondi di attesa
+
+      // 3. Recupera l'indicatore e verifica i campi di arricchimento
+      const getResponse = await request(app.getHttpServer())
+        .get(`/indicators/${indicatorId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      // 4. Asserzioni: Verifica che i dati non siano più nulli/vuoti
+      // Ci aspettiamo che un IP valido come 8.8.4.4 abbia questi dati
+      expect(getResponse.body.isp).not.toBeNull();
+      expect(getResponse.body.isp).not.toBe('');
+      expect(getResponse.body.country_code).toBe('US'); // Google DNS è negli USA
+      expect(getResponse.body.abuse_score).not.toBeNull();
+    }, 15000); // 15 secondi di timeout per questo test
+  });
 });

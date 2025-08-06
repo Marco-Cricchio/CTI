@@ -20,13 +20,16 @@ export class EnrichmentProcessor {
     const { indicatorId, ipAddress } = job.data;
     const apiKey = process.env.ABUSEIPDB_API_KEY;
 
+    console.log(`[ENRICHMENT] Job received for IP: ${ipAddress} (ID: ${indicatorId})`);
+    console.log(`[ENRICHMENT] API Key present: ${!!apiKey}`);
+
     if (!apiKey || apiKey === 'la_tua_chiave_api_qui') {
-      console.warn(`No valid AbuseIPDB API key configured for IP enrichment: ${ipAddress}`);
+      console.warn(`[ENRICHMENT] No valid AbuseIPDB API key configured for IP enrichment: ${ipAddress}`);
       return;
     }
 
     try {
-      console.log(`Starting enrichment for IP: ${ipAddress} (ID: ${indicatorId})`);
+      console.log(`[ENRICHMENT] Starting API call for IP: ${ipAddress} (ID: ${indicatorId})`);
       
       const response = await firstValueFrom(
         this.httpService.get(`https://api.abuseipdb.com/api/v2/check`, {
@@ -43,10 +46,11 @@ export class EnrichmentProcessor {
       );
 
       const data = response.data.data;
-      console.log(`AbuseIPDB response for ${ipAddress}:`, data);
+      console.log(`[ENRICHMENT] AbuseIPDB response for ${ipAddress}:`, JSON.stringify(data, null, 2));
 
       // Aggiorna l'indicatore nel database con i dati ricevuti
-      await this.indicatorsRepository.update(indicatorId, {
+      console.log(`[ENRICHMENT] Updating database for indicator ${indicatorId}`);
+      const updateResult = await this.indicatorsRepository.update(indicatorId, {
         country_code: data.countryCode || null,
         isp: data.isp || null,
         abuse_score: data.abuseConfidenceScore || 0,
@@ -55,7 +59,8 @@ export class EnrichmentProcessor {
         longitude: data.longitude ? parseFloat(data.longitude) : null,
       });
 
-      console.log(`Successfully enriched IP ${ipAddress} with AbuseIPDB data`);
+      console.log(`[ENRICHMENT] Database update result:`, updateResult);
+      console.log(`[ENRICHMENT] Successfully enriched IP ${ipAddress} with AbuseIPDB data`);
 
     } catch (error) {
       console.error(`Failed to enrich IP ${ipAddress}:`, error.message);
