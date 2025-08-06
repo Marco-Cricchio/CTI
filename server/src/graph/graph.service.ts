@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Indicator } from '../indicators/entities/indicator.entity';
 import { Tag } from '../tags/entities/tag.entity';
-import { LayoutService } from './layout.service';
+import { LayoutService, LayoutType } from './layout.service';
 
 export interface GraphFilters {
   threat_levels?: string[];
@@ -22,7 +22,7 @@ export class GraphService {
     private layoutService: LayoutService,
   ) {}
 
-  async getGraphData(filters: GraphFilters = {}) {
+  async getGraphData(filters: GraphFilters = {}, layoutType: LayoutType = 'hierarchical') {
     // Costruisci la query dinamica usando QueryBuilder
     const queryBuilder = this.indicatorsRepository.createQueryBuilder('indicator')
       .leftJoinAndSelect('indicator.tags', 'tag')
@@ -112,7 +112,7 @@ export class GraphService {
       });
     });
 
-    // Applica il layout automatico usando Dagre
-    return this.layoutService.getLayoutedElements(nodes, edges);
+    // Applica il layout usando l'algoritmo richiesto
+    return this.layoutService.getLayoutedElements(nodes, edges, layoutType);
   }
 }

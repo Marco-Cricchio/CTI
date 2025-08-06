@@ -12,7 +12,8 @@ export class GraphController {
   getGraphData(
     @Query('threat_levels') threat_levels?: string | string[],
     @Query('tags') tags?: string | string[],
-    @Query('types') types?: string | string[]
+    @Query('types') types?: string | string[],
+    @Query('layout') layout?: string
   ) {
     // Normalize single values to arrays
     const normalizedFilters = {
@@ -21,6 +22,6 @@ export class GraphController {
       types: Array.isArray(types) ? types : types ? [types] : undefined,
     };
 
-    return this.graphService.getGraphData(normalizedFilters);
+    return this.graphService.getGraphData(normalizedFilters, layout as any);
   }
 }

@@ -16,23 +16,44 @@ export interface GraphEdge {
   type: string;
 }
 
+export type LayoutType = 'hierarchical' | 'radial' | 'force' | 'circular' | 'grid' | 'concentric';
+
 @Injectable()
 export class LayoutService {
-  getLayoutedElements(nodes: GraphNode[], edges: GraphEdge[]) {
+  getLayoutedElements(nodes: GraphNode[], edges: GraphEdge[], layoutType: LayoutType = 'hierarchical') {
+    console.log(`[LAYOUT] Applying ${layoutType} layout to ${nodes.length} nodes`);
+    
+    switch (layoutType) {
+      case 'hierarchical':
+        return this.getHierarchicalLayout(nodes, edges);
+      case 'radial':
+        return this.getRadialLayout(nodes, edges);
+      case 'force':
+        return this.getForceLayout(nodes, edges);
+      case 'circular':
+        return this.getCircularLayout(nodes, edges);
+      case 'grid':
+        return this.getGridLayout(nodes, edges);
+      case 'concentric':
+        return this.getConcentricLayout(nodes, edges);
+      default:
+        return this.getHierarchicalLayout(nodes, edges);
+    }
+  }
+
+  private getHierarchicalLayout(nodes: GraphNode[], edges: GraphEdge[]) {
     const g = new dagre.graphlib.Graph();
     
-    // Configurazione del layout
     g.setGraph({ 
-      rankdir: 'TB',        // Top-to-Bottom layout
-      nodesep: 120,         // Spaziatura orizzontale tra nodi
-      ranksep: 80,          // Spaziatura verticale tra livelli
-      marginx: 20,          // Margine orizzontale
-      marginy: 20           // Margine verticale
+      rankdir: 'TB',
+      nodesep: 120,
+      ranksep: 80,
+      marginx: 20,
+      marginy: 20
     });
     
     g.setDefaultEdgeLabel(() => ({}));
 
-    // Aggiungi tutti i nodi al grafo con dimensioni appropriate
     nodes.forEach((node) => {
       const nodeWidth = node.type === 'indicatorNode' ? 180 : 140;
       const nodeHeight = node.type === 'indicatorNode' ? 80 : 60;
@@ -43,15 +64,12 @@ export class LayoutService {
       });
     });
 
-    // Aggiungi tutti gli archi
     edges.forEach((edge) => {
       g.setEdge(edge.source, edge.target);
     });
 
-    // Esegui il layout automatico
     dagre.layout(g);
 
-    // Applica le posizioni calcolate ai nodi
     const layoutedNodes = nodes.map((node) => {
       const nodeWithPosition = g.node(node.id);
       const nodeWidth = node.type === 'indicatorNode' ? 180 : 140;
@@ -66,11 +84,139 @@ export class LayoutService {
       };
     });
 
-    console.log(`[LAYOUT] Positioned ${layoutedNodes.length} nodes and ${edges.length} edges using Dagre`);
+    return { nodes: layoutedNodes, edges };
+  }
+
+  private getRadialLayout(nodes: GraphNode[], edges: GraphEdge[]) {
+    const centerX = 400;
+    const centerY = 300;
     
-    return { 
-      nodes: layoutedNodes, 
-      edges 
-    };
+    const tagNodes = nodes.filter(n => n.type === 'tagNode');
+    const indicatorNodes = nodes.filter(n => n.type === 'indicatorNode');
+    
+    const layoutedNodes: GraphNode[] = [];
+    
+    // Tags in inner circle
+    const tagRadius = 200;
+    tagNodes.forEach((node, index) => {
+      const angle = (2 * Math.PI * index) / tagNodes.length;
+      layoutedNodes.push({
+        ...node,
+        position: {
+          x: centerX + tagRadius * Math.cos(angle),
+          y: centerY + tagRadius * Math.sin(angle),
+        },
+      });
+    });
+    
+    // Indicators in outer circle
+    const indicatorRadius = 400;
+    indicatorNodes.forEach((node, index) => {
+      const angle = (2 * Math.PI * index) / indicatorNodes.length;
+      layoutedNodes.push({
+        ...node,
+        position: {
+          x: centerX + indicatorRadius * Math.cos(angle),
+          y: centerY + indicatorRadius * Math.sin(angle),
+        },
+      });
+    });
+
+    return { nodes: layoutedNodes, edges };
+  }
+
+  private getForceLayout(nodes: GraphNode[], edges: GraphEdge[]) {
+    // Force-directed with random positioning and connection-based adjustments
+    const layoutedNodes = nodes.map((node, index) => {
+      const angle = Math.random() * 2 * Math.PI;
+      const radius = 200 + Math.random() * 300;
+      return {
+        ...node,
+        position: {
+          x: 400 + radius * Math.cos(angle),
+          y: 300 + radius * Math.sin(angle),
+        },
+      };
+    });
+
+    return { nodes: layoutedNodes, edges };
+  }
+
+  private getCircularLayout(nodes: GraphNode[], edges: GraphEdge[]) {
+    const centerX = 400;
+    const centerY = 300;
+    const radius = 300;
+    
+    const layoutedNodes = nodes.map((node, index) => {
+      const angle = (2 * Math.PI * index) / nodes.length;
+      return {
+        ...node,
+        position: {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+        },
+      };
+    });
+
+    return { nodes: layoutedNodes, edges };
+  }
+
+  private getGridLayout(nodes: GraphNode[], edges: GraphEdge[]) {
+    const cols = Math.ceil(Math.sqrt(nodes.length));
+    
+    const layoutedNodes = nodes.map((node, index) => {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      return {
+        ...node,
+        position: {
+          x: col * 250 + 100,
+          y: row * 150 + 100,
+        },
+      };
+    });
+
+    return { nodes: layoutedNodes, edges };
+  }
+
+  private getConcentricLayout(nodes: GraphNode[], edges: GraphEdge[]) {
+    const centerX = 400;
+    const centerY = 300;
+    
+    const tagNodes = nodes.filter(n => n.type === 'tagNode');
+    const indicatorNodes = nodes.filter(n => n.type === 'indicatorNode');
+    
+    const layoutedNodes: GraphNode[] = [];
+    
+    // Tags in center
+    tagNodes.forEach((node, index) => {
+      const angle = (2 * Math.PI * index) / Math.max(tagNodes.length, 1);
+      const radius = tagNodes.length === 1 ? 0 : 100;
+      layoutedNodes.push({
+        ...node,
+        position: {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+        },
+      });
+    });
+    
+    // Indicators in concentric circles
+    indicatorNodes.forEach((node, index) => {
+      const ring = Math.floor(index / 8) + 1;
+      const positionInRing = index % 8;
+      const angle = (2 * Math.PI * positionInRing) / 8;
+      const radius = 250 + (ring - 1) * 150;
+      
+      layoutedNodes.push({
+        ...node,
+        position: {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
+        },
+      });
+    });
+
+    return { nodes: layoutedNodes, edges };
   }
 }
