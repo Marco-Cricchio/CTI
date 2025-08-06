@@ -1,18 +1,20 @@
 // client/src/pages/GraphExplorerPage.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
   Controls,
-  Node,
   useNodesState,
   useEdgesState,
   addEdge,
   Connection,
   BackgroundVariant,
 } from '@xyflow/react';
+import { Link } from 'react-router-dom';
 import '@xyflow/react/dist/style.css';
 import { apiClient } from '../services/api';
+import IndicatorNode from '../components/GraphNodes/IndicatorNode';
+import TagNode from '../components/GraphNodes/TagNode';
 import styles from './GraphExplorerPage.module.css';
 
 const GraphExplorerPage: React.FC = () => {
@@ -20,6 +22,12 @@ const GraphExplorerPage: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Definiamo i nostri tipi di nodi personalizzati
+  const nodeTypes = useMemo(() => ({ 
+    indicatorNode: IndicatorNode,
+    tagNode: TagNode,
+  }), []);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -33,27 +41,8 @@ const GraphExplorerPage: React.FC = () => {
         const response = await apiClient.get('/graph');
         const { nodes: nodeData, edges: edgeData } = response.data;
         
-        // Personalizza gli stili dei nodi in base al tipo
-        const styledNodes = nodeData.map((node: Node) => ({
-          ...node,
-          style: node.type === 'indicatorNode' ? {
-            background: 'var(--accent-blue)',
-            color: 'white',
-            border: '1px solid var(--text-tertiary)',
-            borderRadius: '8px',
-            padding: '10px',
-            fontSize: '12px',
-          } : {
-            background: 'var(--accent-orange)',
-            color: 'white',
-            border: '1px solid var(--text-tertiary)',
-            borderRadius: '8px',
-            padding: '10px',
-            fontSize: '12px',
-          }
-        }));
-
-        setNodes(styledNodes);
+        // I nodi personalizzati non hanno bisogno di stili inline
+        setNodes(nodeData);
         setEdges(edgeData);
       } catch (error) {
         console.error('Failed to fetch graph data:', error);
@@ -84,6 +73,11 @@ const GraphExplorerPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
+      {/* Pulsante di Navigazione */}
+      <Link to="/" className={styles.backButton}>
+        ← Back to Dashboard
+      </Link>
+
       <div className={styles.header}>
         <h1 className={styles.title}>Graph Explorer</h1>
         <div className={styles.stats}>
@@ -99,6 +93,7 @@ const GraphExplorerPage: React.FC = () => {
         <ReactFlow
           nodes={nodes}
           edges={edges}
+          nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}

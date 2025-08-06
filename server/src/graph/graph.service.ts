@@ -29,7 +29,7 @@ export class GraphService {
         data: { 
           label: indicator.value,
           type: indicator.type,
-          threatLevel: indicator.threat_level
+          threat_level: indicator.threat_level
         },
         position: { x: Math.random() * 800, y: Math.random() * 600 }, // Posizione iniziale casuale
       });
