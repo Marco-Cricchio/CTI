@@ -25,8 +25,8 @@ const TagManager: React.FC<TagManagerProps> = ({ initialTags, onChange }) => {
   }, []);
 
   useEffect(() => {
-    // Sincronizza lo stato quando le props iniziali cambiano
-    setSelectedOptions(initialTags.map(tag => ({ value: tag.id, label: tag.name })));
+    const options = initialTags.map(tag => ({ value: tag.id, label: tag.name }));
+    setSelectedOptions(options);
   }, [initialTags]);
 
   const handleSelectionChange = (options: any) => {
@@ -37,14 +37,54 @@ const TagManager: React.FC<TagManagerProps> = ({ initialTags, onChange }) => {
 
   const tagOptions = allTags.map(tag => ({ value: tag.id, label: tag.name }));
 
+  const customStyles = {
+    menuPortal: (base: any) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: '#2d3748',
+      border: '1px solid #4a5568',
+    }),
+    option: (styles: any, { isFocused, isSelected }: any) => ({
+      ...styles,
+      backgroundColor: isSelected ? '#4a5568' : isFocused ? '#4a5568' : undefined,
+      color: '#e2e8f0',
+      ':active': {
+        ...styles[':active'],
+        backgroundColor: '#2d3748',
+      },
+    }),
+    control: (styles: any) => ({
+        ...styles,
+        backgroundColor: '#1f2937',
+        borderColor: '#4b5563',
+    }),
+    multiValue: (styles: any) => ({
+        ...styles,
+        backgroundColor: '#4b5563',
+    }),
+    multiValueLabel: (styles: any) => ({
+        ...styles,
+        color: '#e5e7eb',
+    }),
+    input: (styles: any) => ({
+        ...styles,
+        color: '#e5e7eb',
+    }),
+  };
+
   return (
     <Select
       isMulti
       options={tagOptions}
       value={selectedOptions}
       onChange={handleSelectionChange}
-      placeholder="Select or create tags..."
+      placeholder="Select tags..."
       noOptionsMessage={() => 'No tags found'}
+      menuPortalTarget={document.body}
+      styles={customStyles}
     />
   );
 };
