@@ -88,6 +88,8 @@ export const GraphFilterPanel: React.FC<GraphFilterPanelProps> = ({
     setIsLoading(true);
     try {
       await onApplyFilters(filters);
+      // Non chiudere il pannello dopo l'applicazione dei filtri
+      // in modo che l'utente possa vedere i filtri applicati
     } finally {
       setIsLoading(false);
     }
@@ -195,6 +197,14 @@ export const GraphFilterPanel: React.FC<GraphFilterPanelProps> = ({
                 menu: (provided) => ({
                   ...provided,
                   backgroundColor: 'var(--bg-secondary)',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  zIndex: 9999
+                }),
+                menuList: (provided) => ({
+                  ...provided,
+                  maxHeight: '180px',
+                  overflowY: 'auto'
                 }),
                 option: (provided, state) => ({
                   ...provided,
@@ -206,6 +216,8 @@ export const GraphFilterPanel: React.FC<GraphFilterPanelProps> = ({
                   color: 'var(--text-primary)'
                 })
               }}
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
             />
           </div>
 

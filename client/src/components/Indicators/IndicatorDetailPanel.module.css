@@ -420,10 +420,11 @@
   font-size: 0.875rem;
 }
 
-.tagEditContainer {
-  transition: padding-bottom 0.2s ease-in-out;
+.tagSelectContainer {
+  transition: margin-bottom 0.2s ease-in-out;
+  margin-bottom: 1rem;
 }
 
 .menuIsOpen {
-  padding-bottom: 250px; /* Aggiunge spazio per il menu, spingendo il contenuto sottostante verso il basso */
+  margin-bottom: 180px; /* Crea spazio per il dropdown, spingendo i pulsanti sottostanti più in basso */
 }

@@ -88,11 +88,6 @@ const GraphExplorerPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {/* Pulsante di Navigazione */}
-      <Link to="/" className={styles.backButton}>
-        ← Back to Dashboard
-      </Link>
-
       {/* Filter Panel */}
       <GraphFilterPanel
         onApplyFilters={fetchGraphData}
@@ -101,15 +96,26 @@ const GraphExplorerPage: React.FC = () => {
       />
 
       <div className={styles.header}>
-        <h1 className={styles.title}>Graph Explorer</h1>
-        <div className={styles.stats}>
-          <span className={styles.stat}>
-            Nodes: {nodes.length}
-          </span>
-          <span className={styles.stat}>
-            Edges: {edges.length}
-          </span>
+        {/* Back Button */}
+        <Link to="/" className={styles.backButtonHeader}>
+          ← Back to Dashboard
+        </Link>
+        
+        {/* Centered Stats */}
+        <div className={styles.centerSection}>
+          <h1 className={styles.title}>Graph Explorer</h1>
+          <div className={styles.stats}>
+            <span className={styles.stat}>
+              Nodes: {nodes.length}
+            </span>
+            <span className={styles.stat}>
+              Edges: {edges.length}
+            </span>
+          </div>
         </div>
+        
+        {/* Spacer for alignment */}
+        <div className={styles.spacer}></div>
       </div>
       <div className={styles.graphContainer}>
         <ReactFlow

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
-import { getTags } from '../../services/api';
+import CreatableSelect from 'react-select/creatable';
+import { getTags, createTag } from '../../services/api';
 import { Tag } from '../../types';
 
 interface TagManagerProps {
@@ -32,9 +32,32 @@ const TagManager: React.FC<TagManagerProps> = ({ initialTags, onChange, onMenuOp
     setSelectedOptions(options);
   }, [initialTags]);
 
-  const handleSelectionChange = (options: any) => {
+  const handleSelectionChange = async (options: any) => {
     setSelectedOptions(options);
-    const selectedTags = options ? options.map((opt: any) => ({ id: opt.value, name: opt.label })) : [];
+    
+    // Handle creation of new tags
+    const processedOptions = [];
+    if (options) {
+      for (const option of options) {
+        if (option.__isNew__) {
+          // This is a newly created tag, create it on the backend
+          try {
+            const newTag = await createTag(option.label);
+            processedOptions.push({ value: newTag.id, label: newTag.name });
+            // Add to allTags so it appears in future searches
+            setAllTags(prev => [...prev, newTag]);
+          } catch (error) {
+            console.error('Failed to create tag:', error);
+            // Still add it locally for now, but with a temporary ID
+            processedOptions.push(option);
+          }
+        } else {
+          processedOptions.push(option);
+        }
+      }
+    }
+    
+    const selectedTags = processedOptions.map((opt: any) => ({ id: opt.value, name: opt.label }));
     onChange(selectedTags);
   };
 
@@ -79,13 +102,14 @@ const TagManager: React.FC<TagManagerProps> = ({ initialTags, onChange, onMenuOp
   };
 
   return (
-    <Select
+    <CreatableSelect
       isMulti
       options={tagOptions}
       value={selectedOptions}
       onChange={handleSelectionChange}
-      placeholder="Select tags..."
-      noOptionsMessage={() => 'No tags found'}
+      placeholder="Select or create tags..."
+      noOptionsMessage={() => 'Type to create a new tag'}
+      formatCreateLabel={(inputValue) => `Create tag "${inputValue}"`}
       onMenuOpen={onMenuOpen}
       onMenuClose={onMenuClose}
       menuIsOpen={menuIsOpen}

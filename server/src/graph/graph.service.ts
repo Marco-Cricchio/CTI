@@ -45,13 +45,31 @@ export class GraphService {
 
     const indicators = await queryBuilder.getMany();
     
-    // Recupera tutti i tag per la visualizzazione (indipendentemente dai filtri)
-    let allTags = await this.tagsRepository.find();
-    
-    // Se filtriamo per tag, mostra solo i tag filtrati nel grafo
-    if (filters.tags && filters.tags.length > 0) {
-      allTags = allTags.filter(tag => filters.tags!.includes(tag.id));
+    // Se non ci sono indicatori che soddisfano i filtri, non mostrare alcun tag
+    if (indicators.length === 0) {
+      console.log(`[GRAPH-FILTER] No indicators found with current filters, returning empty graph`);
+      return this.layoutService.getLayoutedElements([], []);
     }
+    
+    // Recupera solo i tag associati agli indicatori filtrati
+    const tagIdsFromIndicators = new Set<string>();
+    indicators.forEach(indicator => {
+      indicator.tags?.forEach(tag => {
+        tagIdsFromIndicators.add(tag.id);
+      });
+    });
+    
+    // Se filtriamo per tag specifici, usa solo quelli; altrimenti usa tutti i tag degli indicatori
+    let relevantTagIds = Array.from(tagIdsFromIndicators);
+    if (filters.tags && filters.tags.length > 0) {
+      // Mostra solo i tag che sono sia negli indicatori filtrati che nei tag richiesti
+      relevantTagIds = filters.tags.filter(tagId => tagIdsFromIndicators.has(tagId));
+    }
+    
+    // Recupera solo i tag rilevanti
+    const allTags = relevantTagIds.length > 0 
+      ? await this.tagsRepository.findByIds(relevantTagIds)
+      : [];
 
     console.log(`[GRAPH-FILTER] Found ${indicators.length} indicators and ${allTags.length} tags with filters:`, JSON.stringify(filters, null, 2));
 
