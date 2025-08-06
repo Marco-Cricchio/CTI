@@ -4,7 +4,7 @@ import { CreateTagDto } from './dto/create-tag.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('tags')
-@UseGuards(AuthGuard())
+@UseGuards(AuthGuard('jwt'))
 export class TagsController {
   constructor(private readonly tagsService: TagsService) {}
 
