@@ -72,14 +72,59 @@ const GraphExplorerPage: React.FC = () => {
     return { childNodes: Array.from(childNodes), childEdges: Array.from(childEdges) };
   }, []);
 
-  // Handler per il click sui nodi - implementa expand/collapse con animazione
+  // Handler per il click sui nodi - implementa expand/collapse intelligente con animazione
   const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     const { childNodes, childEdges } = getNodeChildren(node.id, initialEdges);
-    const elementsToAnimate = [...childNodes, ...childEdges];
     
     // Verifica se alcuni figli sono già nascosti
     const someChildrenHidden = childNodes.some(childId => hiddenElementIds.has(childId));
     const isExpanding = someChildrenHidden;
+    
+    // Logica intelligente per tag condivisi
+    let elementsToProcess = [...childNodes];
+    let edgesToProcess = [...childEdges];
+    
+    if (!isExpanding && node.type === 'tagNode') {
+      // Se stiamo contraendo da un tag, nascondiamo solo gli indicatori collegati
+      elementsToProcess = childNodes.filter(childId => {
+        const childNode = initialNodes.find(n => n.id === childId);
+        return childNode?.type === 'indicatorNode';
+      });
+      
+      // Solo gli archi che collegano questo tag agli indicatori che stiamo nascondendo
+      edgesToProcess = initialEdges
+        .filter(edge => 
+          (edge.source === node.id && elementsToProcess.includes(edge.target)) ||
+          (edge.target === node.id && elementsToProcess.includes(edge.source))
+        )
+        .map(edge => edge.id);
+    } else if (!isExpanding && node.type === 'indicatorNode') {
+      // Se stiamo contraendo da un indicatore, gestiamo i tag intelligentemente
+      const connectedTags = childNodes.filter(childId => {
+        const childNode = initialNodes.find(n => n.id === childId);
+        return childNode?.type === 'tagNode';
+      });
+      
+      // Per ogni tag connesso, verifica se ha altre connessioni visibili
+      const tagsToHide = connectedTags.filter(tagId => {
+        const { childNodes: tagChildren } = getNodeChildren(tagId, initialEdges);
+        const visibleIndicators = tagChildren.filter(indicatorId => 
+          !hiddenElementIds.has(indicatorId) && indicatorId !== node.id
+        );
+        return visibleIndicators.length === 0; // Nascondi solo se non ha altre connessioni visibili
+      });
+      
+      elementsToProcess = [node.id, ...tagsToHide];
+      
+      // Archi da nascondere: quelli collegati all'indicatore e ai tag che stiamo nascondendo
+      edgesToProcess = initialEdges
+        .filter(edge => 
+          elementsToProcess.includes(edge.source) || elementsToProcess.includes(edge.target)
+        )
+        .map(edge => edge.id);
+    }
+    
+    const elementsToAnimate = [...elementsToProcess, ...edgesToProcess];
     
     // Avvia animazione
     const newAnimatingIds = new Set(animatingElementIds);
@@ -102,13 +147,11 @@ const GraphExplorerPage: React.FC = () => {
       const newHiddenIds = new Set(hiddenElementIds);
       
       if (isExpanding) {
-        // Espandi: rimuovi figli e archi dagli elementi nascosti
-        childNodes.forEach(childId => newHiddenIds.delete(childId));
-        childEdges.forEach(edgeId => newHiddenIds.delete(edgeId));
+        // Espandi: rimuovi elementi dagli elementi nascosti
+        elementsToAnimate.forEach(id => newHiddenIds.delete(id));
       } else {
-        // Contrai: aggiungi figli e archi agli elementi nascosti
-        childNodes.forEach(childId => newHiddenIds.add(childId));
-        childEdges.forEach(edgeId => newHiddenIds.add(edgeId));
+        // Contrai: aggiungi elementi agli elementi nascosti
+        elementsToAnimate.forEach(id => newHiddenIds.add(id));
       }
       
       setHiddenElementIds(newHiddenIds);
@@ -123,11 +166,11 @@ const GraphExplorerPage: React.FC = () => {
         });
         setAnimatingElementIds(finalAnimatingIds);
         setExpandingElementIds(finalExpandingIds);
-      }, isExpanding ? 400 : 300);
+      }, isExpanding ? 500 : 400);
       
-    }, isExpanding ? 0 : 50); // Ritardo minimo per contrazione
+    }, isExpanding ? 0 : 50);
     
-  }, [getNodeChildren, initialEdges, hiddenElementIds, animatingElementIds, expandingElementIds]);
+  }, [getNodeChildren, initialEdges, initialNodes, hiddenElementIds, animatingElementIds, expandingElementIds]);
 
   // Aggiorna gli elementi visualizzati quando cambiano quelli nascosti
   useEffect(() => {
@@ -200,7 +243,7 @@ const GraphExplorerPage: React.FC = () => {
       setTimeout(() => {
         setAnimatingElementIds(new Set());
         setExpandingElementIds(new Set());
-      }, 350);
+      }, 450);
     }, 100);
     
   }, [initialNodes, initialEdges, animatingElementIds, expandingElementIds]);
@@ -221,7 +264,7 @@ const GraphExplorerPage: React.FC = () => {
       setTimeout(() => {
         setAnimatingElementIds(new Set());
         setExpandingElementIds(new Set());
-      }, 450);
+      }, 550);
     }, 50);
     
   }, [hiddenElementIds]);
