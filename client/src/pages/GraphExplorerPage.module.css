@@ -155,3 +155,93 @@
   border-radius: 4px;
   padding: 2px 6px;
 }
+
+/* Animazioni fluide per expand/collapse */
+:global(.react-flow__node) {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:global(.react-flow__edge) {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:global(.react-flow__node.animating) {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: nodeExpand 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:global(.react-flow__edge.animating) {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: edgeExpand 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes nodeExpand {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-20px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05) translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes edgeExpand {
+  0% {
+    opacity: 0;
+    stroke-dasharray: 5, 5;
+    stroke-dashoffset: 10;
+  }
+  50% {
+    opacity: 0.7;
+    stroke-dashoffset: 5;
+  }
+  100% {
+    opacity: 1;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Animazione di contrazione */
+:global(.react-flow__node.collapsing) {
+  animation: nodeCollapse 0.3s cubic-bezier(0.4, 0, 0.8, 1);
+}
+
+:global(.react-flow__edge.collapsing) {
+  animation: edgeCollapse 0.3s cubic-bezier(0.4, 0, 0.8, 1);
+}
+
+@keyframes nodeCollapse {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8) translateY(10px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3) translateY(20px);
+  }
+}
+
+@keyframes edgeCollapse {
+  0% {
+    opacity: 1;
+    stroke-dasharray: none;
+  }
+  50% {
+    opacity: 0.5;
+    stroke-dasharray: 3, 3;
+  }
+  100% {
+    opacity: 0;
+    stroke-dasharray: 1, 5;
+  }
+}

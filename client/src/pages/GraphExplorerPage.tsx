@@ -29,6 +29,8 @@ const GraphExplorerPage: React.FC = () => {
   
   // Stati per il controllo di visibilità
   const [hiddenElementIds, setHiddenElementIds] = useState<Set<string>>(new Set());
+  const [animatingElementIds, setAnimatingElementIds] = useState<Set<string>>(new Set());
+  const [expandingElementIds, setExpandingElementIds] = useState<Set<string>>(new Set());
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,45 +72,103 @@ const GraphExplorerPage: React.FC = () => {
     return { childNodes: Array.from(childNodes), childEdges: Array.from(childEdges) };
   }, []);
 
-  // Handler per il click sui nodi - implementa expand/collapse
+  // Handler per il click sui nodi - implementa expand/collapse con animazione
   const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     const { childNodes, childEdges } = getNodeChildren(node.id, initialEdges);
+    const elementsToAnimate = [...childNodes, ...childEdges];
     
     // Verifica se alcuni figli sono già nascosti
     const someChildrenHidden = childNodes.some(childId => hiddenElementIds.has(childId));
+    const isExpanding = someChildrenHidden;
     
-    const newHiddenIds = new Set(hiddenElementIds);
+    // Avvia animazione
+    const newAnimatingIds = new Set(animatingElementIds);
+    const newExpandingIds = new Set(expandingElementIds);
     
-    if (someChildrenHidden) {
-      // Espandi: rimuovi figli e archi dagli elementi nascosti
-      childNodes.forEach(childId => newHiddenIds.delete(childId));
-      childEdges.forEach(edgeId => newHiddenIds.delete(edgeId));
-    } else {
-      // Contrai: aggiungi figli e archi agli elementi nascosti
-      childNodes.forEach(childId => newHiddenIds.add(childId));
-      childEdges.forEach(edgeId => newHiddenIds.add(edgeId));
-    }
+    elementsToAnimate.forEach(id => {
+      newAnimatingIds.add(id);
+      if (isExpanding) {
+        newExpandingIds.add(id);
+      } else {
+        newExpandingIds.delete(id);
+      }
+    });
     
-    setHiddenElementIds(newHiddenIds);
-  }, [getNodeChildren, initialEdges, hiddenElementIds]);
+    setAnimatingElementIds(newAnimatingIds);
+    setExpandingElementIds(newExpandingIds);
+    
+    // Ritarda il cambio di visibilità per permettere l'animazione
+    setTimeout(() => {
+      const newHiddenIds = new Set(hiddenElementIds);
+      
+      if (isExpanding) {
+        // Espandi: rimuovi figli e archi dagli elementi nascosti
+        childNodes.forEach(childId => newHiddenIds.delete(childId));
+        childEdges.forEach(edgeId => newHiddenIds.delete(edgeId));
+      } else {
+        // Contrai: aggiungi figli e archi agli elementi nascosti
+        childNodes.forEach(childId => newHiddenIds.add(childId));
+        childEdges.forEach(edgeId => newHiddenIds.add(edgeId));
+      }
+      
+      setHiddenElementIds(newHiddenIds);
+      
+      // Fine animazione dopo la transizione
+      setTimeout(() => {
+        const finalAnimatingIds = new Set(animatingElementIds);
+        const finalExpandingIds = new Set(expandingElementIds);
+        elementsToAnimate.forEach(id => {
+          finalAnimatingIds.delete(id);
+          finalExpandingIds.delete(id);
+        });
+        setAnimatingElementIds(finalAnimatingIds);
+        setExpandingElementIds(finalExpandingIds);
+      }, isExpanding ? 400 : 300);
+      
+    }, isExpanding ? 0 : 50); // Ritardo minimo per contrazione
+    
+  }, [getNodeChildren, initialEdges, hiddenElementIds, animatingElementIds, expandingElementIds]);
 
   // Aggiorna gli elementi visualizzati quando cambiano quelli nascosti
   useEffect(() => {
-    const visibleNodes = initialNodes.filter(n => !hiddenElementIds.has(n.id));
-    const visibleEdges = initialEdges.filter(e => !hiddenElementIds.has(e.id));
+    const visibleNodes = initialNodes
+      .filter(n => !hiddenElementIds.has(n.id))
+      .map(node => {
+        let animationClass = '';
+        if (animatingElementIds.has(node.id)) {
+          animationClass = expandingElementIds.has(node.id) ? 'animating' : 'collapsing';
+        }
+        return {
+          ...node,
+          className: `${node.className || ''} ${animationClass}`.trim()
+        };
+      });
+      
+    const visibleEdges = initialEdges
+      .filter(e => !hiddenElementIds.has(e.id))
+      .map(edge => {
+        let animationClass = '';
+        if (animatingElementIds.has(edge.id)) {
+          animationClass = expandingElementIds.has(edge.id) ? 'animating' : 'collapsing';
+        }
+        return {
+          ...edge,
+          className: `${edge.className || ''} ${animationClass}`.trim()
+        };
+      });
     
     setNodes(visibleNodes);
     setEdges(visibleEdges);
-  }, [hiddenElementIds, initialNodes, initialEdges, setNodes, setEdges]);
+  }, [hiddenElementIds, initialNodes, initialEdges, animatingElementIds, expandingElementIds, setNodes, setEdges]);
 
-  // Controllo globale: Contrai tutto (nascondi tutti gli indicatori)
+  // Controllo globale: Contrai tutto (nascondi tutti gli indicatori) con animazione
   const handleCollapseAll = useCallback(() => {
-    const newHiddenIds = new Set<string>();
+    const elementsToHide = new Set<string>();
     
     // Trova tutti gli indicatori (nodi figli) e i relativi archi
     initialNodes.forEach(node => {
       if (node.type === 'indicatorNode') {
-        newHiddenIds.add(node.id);
+        elementsToHide.add(node.id);
       }
     });
     
@@ -118,17 +178,53 @@ const GraphExplorerPage: React.FC = () => {
       const targetNode = initialNodes.find(n => n.id === edge.target);
       
       if (sourceNode?.type === 'indicatorNode' || targetNode?.type === 'indicatorNode') {
-        newHiddenIds.add(edge.id);
+        elementsToHide.add(edge.id);
       }
     });
     
-    setHiddenElementIds(newHiddenIds);
-  }, [initialNodes, initialEdges]);
+    // Avvia animazione globale (contrazione)
+    const newAnimatingIds = new Set(animatingElementIds);
+    const newExpandingIds = new Set(expandingElementIds);
+    Array.from(elementsToHide).forEach(id => {
+      newAnimatingIds.add(id);
+      newExpandingIds.delete(id); // Non è espansione
+    });
+    setAnimatingElementIds(newAnimatingIds);
+    setExpandingElementIds(newExpandingIds);
+    
+    // Applica nascondimento con ritardo per animazione
+    setTimeout(() => {
+      setHiddenElementIds(elementsToHide);
+      
+      // Fine animazione
+      setTimeout(() => {
+        setAnimatingElementIds(new Set());
+        setExpandingElementIds(new Set());
+      }, 350);
+    }, 100);
+    
+  }, [initialNodes, initialEdges, animatingElementIds, expandingElementIds]);
 
-  // Controllo globale: Espandi tutto (mostra tutti gli elementi)
+  // Controllo globale: Espandi tutto (mostra tutti gli elementi) con animazione
   const handleExpandAll = useCallback(() => {
-    setHiddenElementIds(new Set());
-  }, []);
+    // Avvia animazione per elementi nascosti (espansione)
+    const newAnimatingIds = new Set(hiddenElementIds);
+    const newExpandingIds = new Set(hiddenElementIds);
+    setAnimatingElementIds(newAnimatingIds);
+    setExpandingElementIds(newExpandingIds);
+    
+    // Mostra tutti gli elementi immediatamente per espansione
+    setTimeout(() => {
+      setHiddenElementIds(new Set());
+      
+      // Fine animazione
+      setTimeout(() => {
+        setAnimatingElementIds(new Set());
+        setExpandingElementIds(new Set());
+      }, 450);
+    }, 50);
+    
+  }, [hiddenElementIds]);
 
   const fetchGraphData = useCallback(async (filters = {}) => {
     try {
@@ -156,8 +252,10 @@ const GraphExplorerPage: React.FC = () => {
       setInitialNodes(nodeData);
       setInitialEdges(edgeData);
       
-      // Reset degli elementi nascosti quando si caricano nuovi dati
+      // Reset degli elementi nascosti e animazioni quando si caricano nuovi dati
       setHiddenElementIds(new Set());
+      setAnimatingElementIds(new Set());
+      setExpandingElementIds(new Set());
       
       // I nodi personalizzati non hanno bisogno di stili inline
       setNodes(nodeData);
