@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Indicator } from '../indicators/entities/indicator.entity';
 import { Tag } from '../tags/entities/tag.entity';
+import { LayoutService } from './layout.service';
 
 @Injectable()
 export class GraphService {
@@ -12,6 +13,7 @@ export class GraphService {
     private indicatorsRepository: Repository<Indicator>,
     @InjectRepository(Tag)
     private tagsRepository: Repository<Tag>,
+    private layoutService: LayoutService,
   ) {}
 
   async getGraphData() {
@@ -31,7 +33,7 @@ export class GraphService {
           type: indicator.type,
           threat_level: indicator.threat_level
         },
-        position: { x: Math.random() * 800, y: Math.random() * 600 }, // Posizione iniziale casuale
+        // Position will be calculated by LayoutService
       });
 
       // Creazione archi verso i tag associati
@@ -53,10 +55,11 @@ export class GraphService {
         data: { 
           label: tag.name
         },
-        position: { x: Math.random() * 800, y: Math.random() * 600 },
+        // Position will be calculated by LayoutService
       });
     });
 
-    return { nodes, edges };
+    // Applica il layout automatico usando Dagre
+    return this.layoutService.getLayoutedElements(nodes, edges);
   }
 }

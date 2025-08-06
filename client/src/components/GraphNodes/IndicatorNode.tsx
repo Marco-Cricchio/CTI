@@ -36,17 +36,19 @@ interface IndicatorNodeProps {
 
 const IndicatorNode: React.FC<IndicatorNodeProps> = ({ data }) => {
   const icon = getIndicatorIcon(data.type);
-  const backgroundColor = getThreatLevelColor(data.threat_level);
+  const threatColor = getThreatLevelColor(data.threat_level);
   
   return (
-    <div className={styles.indicatorNode} style={{ backgroundColor }}>
+    <div className={styles.indicatorNode} style={{ borderColor: threatColor }}>
       <Handle type="source" position={Position.Top} className={styles.handle} />
       <div className={styles.nodeContent}>
         <span className={styles.icon}>{icon}</span>
         <span className={styles.label}>{data.label}</span>
       </div>
-      <div className={styles.threatBadge}>
-        {data.threat_level.toUpperCase()}
+      <div className={styles.badgeContainer}>
+        <span className={styles.threatBadge} style={{ backgroundColor: threatColor }}>
+          {data.threat_level.toUpperCase()}
+        </span>
       </div>
       <Handle type="target" position={Position.Bottom} className={styles.handle} />
     </div>
