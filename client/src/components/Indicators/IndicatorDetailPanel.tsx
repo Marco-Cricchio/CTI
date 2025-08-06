@@ -211,14 +211,16 @@ export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) =>
               </div>
               
               {isEditingTags ? (
-                <div className={clsx(styles.tagEditContainer, { [styles.menuIsOpen]: isTagMenuOpen })}>
-                  <TagManager
-                    initialTags={selectedTags}
-                    onChange={setSelectedTags}
-                    onMenuOpen={() => setIsTagMenuOpen(true)}
-                    onMenuClose={() => setIsTagMenuOpen(false)}
-                    menuIsOpen={isTagMenuOpen}
-                  />
+                <div>
+                  <div className={clsx(styles.tagSelectContainer, { [styles.menuIsOpen]: isTagMenuOpen })}>
+                    <TagManager
+                      initialTags={selectedTags}
+                      onChange={setSelectedTags}
+                      onMenuOpen={() => setIsTagMenuOpen(true)}
+                      onMenuClose={() => setIsTagMenuOpen(false)}
+                      menuIsOpen={isTagMenuOpen}
+                    />
+                  </div>
                   <div className={styles.tagEditButtons}>
                     <button 
                       onClick={handleSaveTags}
@@ -306,7 +308,7 @@ export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) =>
                       <div className={styles.enrichmentItem}>
                         <label>Geolocation:</label>
                         <span>
-                          {displayIndicator.latitude?.toFixed(4)}, {displayIndicator.longitude?.toFixed(4)}
+                          {parseFloat(displayIndicator.latitude.toString()).toFixed(4)}, {parseFloat(displayIndicator.longitude.toString()).toFixed(4)}
                         </span>
                       </div>
                     )}
@@ -327,8 +329,8 @@ export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) =>
                     <h4 className={styles.mapTitle}>Geographic Location</h4>
                     <div className={styles.mapContainer}>
                       <IpGeolocationMap
-                        latitude={displayIndicator.latitude}
-                        longitude={displayIndicator.longitude}
+                        latitude={parseFloat(displayIndicator.latitude.toString())}
+                        longitude={parseFloat(displayIndicator.longitude.toString())}
                         isp={displayIndicator.isp || undefined}
                         countryCode={displayIndicator.country_code || undefined}
                         ipAddress={displayIndicator.value}

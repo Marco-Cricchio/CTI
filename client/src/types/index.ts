@@ -23,8 +23,8 @@ export interface Indicator {
   isp?: string | null;
   abuse_score?: number | null;
   domain_usage?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
+  latitude?: number | string | null; // Can be string due to PostgreSQL decimal handling
+  longitude?: number | string | null; // Can be string due to PostgreSQL decimal handling
   
   // Tags (optional)
   tags?: Tag[];

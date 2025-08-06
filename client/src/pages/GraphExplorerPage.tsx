@@ -5,7 +5,6 @@ import {
   Background,
   Controls,
   Node,
-  Edge,
   useNodesState,
   useEdgesState,
   addEdge,
