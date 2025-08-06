@@ -10,6 +10,7 @@ import { CreateIndicatorDto } from './dto/create-indicator.dto';
 import { UpdateIndicatorDto } from './dto/update-indicator.dto';
 import { QueryIndicatorDto } from './dto/query-indicator.dto';
 import { User } from '../auth/entities/user.entity';
+import { Tag } from '../tags/entities/tag.entity';
 
 @Injectable()
 export class IndicatorsService {
@@ -18,6 +19,8 @@ export class IndicatorsService {
     private indicatorsRepository: Repository<Indicator>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Tag)
+    private tagsRepository: Repository<Tag>,
     @InjectQueue('enrichment-queue') private enrichmentQueue: Queue,
   ) {}
 
@@ -102,7 +105,7 @@ export class IndicatorsService {
   async findOne(id: string): Promise<Indicator> {
     const indicator = await this.indicatorsRepository.findOne({
       where: { id, is_active: true },
-      relations: ['created_by'],
+      relations: ['created_by', 'tags'],
     });
     if (!indicator) {
       throw new NotFoundException(`Indicator with ID "${id}" not found`);
@@ -163,5 +166,32 @@ export class IndicatorsService {
       activeInvestigations,
       dataFeeds,
     };
+  }
+
+  async addTagsToIndicator(indicatorId: string, tagIds: string[]): Promise<Indicator> {
+    // Trova l'indicatore
+    const indicator = await this.indicatorsRepository.findOne({
+      where: { id: indicatorId, is_active: true },
+      relations: ['tags'],
+    });
+    
+    if (!indicator) {
+      throw new NotFoundException(`Indicator with ID "${indicatorId}" not found`);
+    }
+
+    // Se tagIds è undefined o vuoto, rimuovi tutti i tag
+    if (!tagIds || tagIds.length === 0) {
+      indicator.tags = [];
+      return await this.indicatorsRepository.save(indicator);
+    }
+
+    // Trova tutti i tag corrispondenti ai tagIds forniti
+    const tags = await this.tagsRepository.findByIds(tagIds);
+    
+    // Assegna i tag all'indicatore (sostituisce i tag esistenti)
+    indicator.tags = tags;
+    
+    // Salva l'indicatore con i nuovi tag
+    return await this.indicatorsRepository.save(indicator);
   }
 }

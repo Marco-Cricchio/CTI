@@ -6,11 +6,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
 import { Indicator } from './entities/indicator.entity';
 import { AuthModule } from '../auth/auth.module';
-import { User } from '../auth/entities/user.entity'; // <-- AGGIUNGI QUESTO IMPORT
+import { User } from '../auth/entities/user.entity';
+import { Tag } from '../tags/entities/tag.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Indicator, User]), // <-- AGGIUNGI User QUI
+    TypeOrmModule.forFeature([Indicator, User, Tag]),
     BullModule.registerQueue({
       name: 'enrichment-queue',
     }),

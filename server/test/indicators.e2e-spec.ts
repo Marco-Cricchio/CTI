@@ -36,6 +36,7 @@ describe('Indicators E2E', () => {
       'TRUNCATE TABLE "indicators" RESTART IDENTITY CASCADE',
     );
     await dataSource.query('TRUNCATE TABLE "users" RESTART IDENTITY CASCADE');
+    await dataSource.query('TRUNCATE TABLE "tags" RESTART IDENTITY CASCADE');
 
     // Note: Queue cleanup removed as it was causing timeouts in test environment
 
@@ -925,6 +926,127 @@ describe('Indicators E2E', () => {
 
       expect(response.body).toHaveProperty('message', 'Unauthorized');
       expect(response.body).toHaveProperty('statusCode', 401);
+    });
+  });
+
+  // =====================================
+  // TAG ASSOCIATION TESTS (POST /indicators/:id/tags)
+  // =====================================
+
+  describe('POST /indicators/:id/tags', () => {
+    let testIndicator;
+    let testTag1;
+    let testTag2;
+
+    beforeEach(async () => {
+      // Crea un indicatore e alcuni tag di prova per ogni test
+      const createResponse = await request(app.getHttpServer())
+        .post('/indicators')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ value: 'test.com', type: 'domain', threat_level: 'low' });
+      testIndicator = createResponse.body;
+
+      const tag1Response = await request(app.getHttpServer())
+        .post('/tags')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'Tag1' });
+      testTag1 = tag1Response.body;
+
+      const tag2Response = await request(app.getHttpServer())
+        .post('/tags')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'Tag2' });
+      testTag2 = tag2Response.body;
+    });
+
+    it('should associate tags with an indicator', async () => {
+      await request(app.getHttpServer())
+        .post(`/indicators/${testIndicator.id}/tags`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ tagIds: [testTag1.id, testTag2.id] })
+        .expect(200);
+
+      // Verifica che l'associazione sia stata salvata
+      const response = await request(app.getHttpServer())
+        .get(`/indicators/${testIndicator.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.body.tags).toBeInstanceOf(Array);
+      expect(response.body.tags.length).toBe(2);
+      expect(response.body.tags.map(t => t.id)).toContain(testTag1.id);
+      expect(response.body.tags.map(t => t.id)).toContain(testTag2.id);
+    });
+
+    it('should return 404 if indicator does not exist', () => {
+      const nonExistentId = 'a1b2c3d4-e5f6-7890-1234-567890abcdef';
+      return request(app.getHttpServer())
+        .post(`/indicators/${nonExistentId}/tags`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ tagIds: [testTag1.id] })
+        .expect(404);
+    });
+
+    it('should handle missing tagIds (equivalent to empty array)', async () => {
+      await request(app.getHttpServer())
+        .post(`/indicators/${testIndicator.id}/tags`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({})
+        .expect(200);
+
+      // Verifica che non ci siano tag associati
+      const response = await request(app.getHttpServer())
+        .get(`/indicators/${testIndicator.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.body.tags).toBeInstanceOf(Array);
+      expect(response.body.tags.length).toBe(0);
+    });
+
+    it('should return 401 if not authenticated', () => {
+      return request(app.getHttpServer())
+        .post(`/indicators/${testIndicator.id}/tags`)
+        .send({ tagIds: [testTag1.id] })
+        .expect(401);
+    });
+
+    it('should handle empty tagIds array', async () => {
+      await request(app.getHttpServer())
+        .post(`/indicators/${testIndicator.id}/tags`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ tagIds: [] })
+        .expect(200);
+
+      // Verifica che non ci siano tag associati
+      const response = await request(app.getHttpServer())
+        .get(`/indicators/${testIndicator.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.body.tags).toBeInstanceOf(Array);
+      expect(response.body.tags.length).toBe(0);
+    });
+
+    it('should handle association of same tags multiple times (idempotent)', async () => {
+      // Prima associazione
+      await request(app.getHttpServer())
+        .post(`/indicators/${testIndicator.id}/tags`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ tagIds: [testTag1.id] })
+        .expect(200);
+
+      // Seconda associazione degli stessi tag
+      await request(app.getHttpServer())
+        .post(`/indicators/${testIndicator.id}/tags`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ tagIds: [testTag1.id] })
+        .expect(200);
+
+      // Verifica che il tag sia ancora presente una sola volta
+      const response = await request(app.getHttpServer())
+        .get(`/indicators/${testIndicator.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.body.tags.length).toBe(1);
+      expect(response.body.tags[0].id).toBe(testTag1.id);
     });
   });
 });

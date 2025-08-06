@@ -10,11 +10,14 @@ import {
   Patch,
   Query,
   ValidationPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { IndicatorsService } from './indicators.service';
 import { CreateIndicatorDto } from './dto/create-indicator.dto';
 import { UpdateIndicatorDto } from './dto/update-indicator.dto';
 import { QueryIndicatorDto } from './dto/query-indicator.dto';
+import { AddTagsDto } from './dto/add-tags.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from '../auth/get-user.decorator';
 import { User } from '../auth/entities/user.entity';
@@ -55,6 +58,15 @@ export class IndicatorsController {
     @Body() updateIndicatorDto: UpdateIndicatorDto,
   ) {
     return this.indicatorsService.update(id, updateIndicatorDto);
+  }
+
+  @Post(':id/tags')
+  @HttpCode(HttpStatus.OK)
+  addTags(
+    @Param('id') id: string, 
+    @Body() addTagsDto: AddTagsDto
+  ) {
+    return this.indicatorsService.addTagsToIndicator(id, addTagsDto.tagIds || []);
   }
 
   @Delete(':id')
