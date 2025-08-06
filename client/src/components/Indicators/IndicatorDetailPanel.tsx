@@ -161,6 +161,20 @@ export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) =>
               </div>
             </section>
 
+            {/* Tags Section */}
+            {displayIndicator.tags && displayIndicator.tags.length > 0 && (
+              <section className={styles.section}>
+                <h3 className={styles.sectionTitle}>Tags</h3>
+                <div className={styles.tagsContainer}>
+                  {displayIndicator.tags.map((tag) => (
+                    <span key={tag.id} className={styles.tagPill}>
+                      {tag.name}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* IP Enrichment Section */}
             {displayIndicator.type === 'ip' && (
               <section className={styles.section}>

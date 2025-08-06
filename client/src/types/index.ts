@@ -1,5 +1,10 @@
 // client/src/types/index.ts
 
+export interface Tag {
+  id: string;
+  name: string;
+}
+
 export interface Indicator {
   id: string;
   value: string;
@@ -20,6 +25,9 @@ export interface Indicator {
   domain_usage?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  
+  // Tags (optional)
+  tags?: Tag[];
 }
 
 export interface ApiResponse<T> {
