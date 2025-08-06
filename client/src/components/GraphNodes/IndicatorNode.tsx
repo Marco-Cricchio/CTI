@@ -41,15 +41,19 @@ const IndicatorNode: React.FC<IndicatorNodeProps> = ({ data }) => {
   return (
     <div className={styles.indicatorNode} style={{ borderColor: threatColor }}>
       <Handle type="source" position={Position.Top} className={styles.handle} />
-      <div className={styles.nodeContent}>
-        <span className={styles.icon}>{icon}</span>
-        <span className={styles.label}>{data.label}</span>
-      </div>
-      <div className={styles.badgeContainer}>
-        <span className={styles.threatBadge} style={{ backgroundColor: threatColor }}>
+      
+      {/* Main content area */}
+      <div className={styles.nodeHeader}>
+        <div className={styles.nodeContent}>
+          <span className={styles.icon}>{icon}</span>
+          <span className={styles.label}>{data.label}</span>
+        </div>
+        {/* Prominent severity badge inside the node */}
+        <div className={styles.severityBadge} style={{ backgroundColor: threatColor }}>
           {data.threat_level.toUpperCase()}
-        </span>
+        </div>
       </div>
+      
       <Handle type="target" position={Position.Bottom} className={styles.handle} />
     </div>
   );
