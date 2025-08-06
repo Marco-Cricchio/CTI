@@ -15,6 +15,7 @@ import '@xyflow/react/dist/style.css';
 import { apiClient } from '../services/api';
 import IndicatorNode from '../components/GraphNodes/IndicatorNode';
 import TagNode from '../components/GraphNodes/TagNode';
+import { GraphFilterPanel } from '../components/GraphFilterPanel/GraphFilterPanel';
 import styles from './GraphExplorerPage.module.css';
 
 const GraphExplorerPage: React.FC = () => {
@@ -22,6 +23,7 @@ const GraphExplorerPage: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
   // Definiamo i nostri tipi di nodi personalizzati
   const nodeTypes = useMemo(() => ({ 
@@ -34,26 +36,39 @@ const GraphExplorerPage: React.FC = () => {
     [setEdges]
   );
 
-  useEffect(() => {
-    const fetchGraphData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await apiClient.get('/graph');
-        const { nodes: nodeData, edges: edgeData } = response.data;
-        
-        // I nodi personalizzati non hanno bisogno di stili inline
-        setNodes(nodeData);
-        setEdges(edgeData);
-      } catch (error) {
-        console.error('Failed to fetch graph data:', error);
-        setError('Failed to load graph data. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchGraphData();
+  const fetchGraphData = useCallback(async (filters = {}) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Costruisci i parametri di query
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (Array.isArray(value) && value.length > 0) {
+          value.forEach(v => params.append(key, v));
+        }
+      });
+      
+      const queryString = params.toString();
+      const url = queryString ? `/graph?${queryString}` : '/graph';
+      
+      const response = await apiClient.get(url);
+      const { nodes: nodeData, edges: edgeData } = response.data;
+      
+      // I nodi personalizzati non hanno bisogno di stili inline
+      setNodes(nodeData);
+      setEdges(edgeData);
+    } catch (error) {
+      console.error('Failed to fetch graph data:', error);
+      setError('Failed to load graph data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }, [setNodes, setEdges]);
+
+  useEffect(() => {
+    fetchGraphData(); // Chiamata iniziale senza filtri
+  }, [fetchGraphData]);
 
   if (isLoading) {
     return (
@@ -77,6 +92,13 @@ const GraphExplorerPage: React.FC = () => {
       <Link to="/" className={styles.backButton}>
         ← Back to Dashboard
       </Link>
+
+      {/* Filter Panel */}
+      <GraphFilterPanel
+        onApplyFilters={fetchGraphData}
+        isOpen={isFilterPanelOpen}
+        onToggle={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+      />
 
       <div className={styles.header}>
         <h1 className={styles.title}>Graph Explorer</h1>
