@@ -63,9 +63,15 @@ export const getTags = async (): Promise<Tag[]> => {
   return response.data;
 };
 
+export const createTag = async (name: string): Promise<Tag> => {
+  const response = await api.post('/tags', { name });
+  return response.data;
+};
+
 export const updateIndicatorTags = async (indicatorId: string, tagIds: string[]): Promise<Indicator> => {
   const response = await api.post(`/indicators/${indicatorId}/tags`, { tagIds });
   return response.data;
 };
 
+export const apiClient = api;
 export default api;

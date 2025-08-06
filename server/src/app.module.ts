@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module'; // Importato una sola volta
 import { IndicatorsModule } from './indicators/indicators.module';
 import { EnrichmentModule } from './enrichment/enrichment.module';
 import { TagsModule } from './tags/tags.module';
+import { GraphModule } from './graph/graph.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { TagsModule } from './tags/tags.module';
     IndicatorsModule,
     EnrichmentModule,
     TagsModule,
+    GraphModule,
   ],
   controllers: [],
   providers: [],

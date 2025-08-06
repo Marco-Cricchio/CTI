@@ -15,6 +15,7 @@ import { Indicator } from './types';
 import layoutStyles from './components/Layout/Layout.module.css';
 import dashboardStyles from './components/Dashboard/Dashboard.module.css';
 import { Toaster } from 'react-hot-toast';
+import GraphExplorerPage from './pages/GraphExplorerPage';
 
 // Componente per la route protetta
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -106,6 +107,7 @@ function App() {
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage />} />
         <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/graph" element={<ProtectedRoute><GraphExplorerPage /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

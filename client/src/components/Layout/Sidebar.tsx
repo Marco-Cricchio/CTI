@@ -1,7 +1,10 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import styles from './Sidebar.module.css';
 
 export const Sidebar: React.FC = () => {
+  const location = useLocation();
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logo}>
@@ -9,11 +12,14 @@ export const Sidebar: React.FC = () => {
       </div>
       <nav className={styles.nav}>
         <ul className={styles.navList}>
-          <li className={`${styles.navItem} ${styles.active}`}>
-            <span>📊 Dashboard</span>
+          <li className={`${styles.navItem} ${location.pathname === '/' ? styles.active : ''}`}>
+            <Link to="/">📊 Dashboard</Link>
           </li>
           <li className={styles.navItem}>
             <span>🔍 Indicators</span>
+          </li>
+          <li className={`${styles.navItem} ${location.pathname === '/graph' ? styles.active : ''}`}>
+            <Link to="/graph">🕸️ Graph Explorer</Link>
           </li>
           <li className={styles.navItem}>
             <span>📋 Investigations</span>
