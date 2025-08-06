@@ -1,6 +1,6 @@
 // client/src/services/api.ts
 import axios from 'axios';
-import { Indicator, ApiResponse, DashboardStats } from '../types';
+import { Indicator, ApiResponse, DashboardStats, Tag } from '../types';
 
 const api = axios.create({
   baseURL: 'http://localhost:3001/api',
@@ -55,6 +55,17 @@ export const indicatorService = {
     const response = await api.get('/indicators/stats');
     return response.data;
   },
+};
+
+// Tag service functions
+export const getTags = async (): Promise<Tag[]> => {
+  const response = await api.get('/tags');
+  return response.data;
+};
+
+export const updateIndicatorTags = async (indicatorId: string, tagIds: string[]): Promise<Indicator> => {
+  const response = await api.post(`/indicators/${indicatorId}/tags`, { tagIds });
+  return response.data;
 };
 
 export default api;

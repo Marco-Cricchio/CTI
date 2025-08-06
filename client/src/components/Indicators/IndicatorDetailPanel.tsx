@@ -2,9 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Indicator } from '../../types';
-import { indicatorService } from '../../services/api';
+import { Indicator, Tag } from '../../types';
+import { indicatorService, updateIndicatorTags } from '../../services/api';
 import { IpGeolocationMap } from './IpGeolocationMap';
+import TagManager from '../TagManager/TagManager';
 import styles from './IndicatorDetailPanel.module.css';
 
 interface Props {
@@ -15,6 +16,9 @@ interface Props {
 export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) => {
   const [detailedIndicator, setDetailedIndicator] = useState<Indicator | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isEditingTags, setIsEditingTags] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [savingTags, setSavingTags] = useState(false);
 
   useEffect(() => {
     const fetchDetailedIndicator = async () => {
@@ -56,6 +60,39 @@ export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) =>
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
+  };
+
+  const handleEditTags = () => {
+    setSelectedTags(displayIndicator.tags || []);
+    setIsEditingTags(true);
+  };
+
+  const handleCancelEditTags = () => {
+    setIsEditingTags(false);
+    setSelectedTags([]);
+  };
+
+  const handleSaveTags = async () => {
+    if (!displayIndicator) return;
+    
+    setSavingTags(true);
+    try {
+      const tagIds = selectedTags.map(tag => tag.id);
+      const updatedIndicator = await updateIndicatorTags(displayIndicator.id, tagIds);
+      
+      // Update the local state
+      setDetailedIndicator(updatedIndicator);
+      setIsEditingTags(false);
+      setSelectedTags([]);
+    } catch (error) {
+      console.error('Failed to update tags:', error);
+    } finally {
+      setSavingTags(false);
+    }
+  };
+
+  const handleTagsChange = (tags: Tag[]) => {
+    setSelectedTags(tags);
   };
 
   return (
@@ -162,18 +199,56 @@ export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) =>
             </section>
 
             {/* Tags Section */}
-            {displayIndicator.tags && displayIndicator.tags.length > 0 && (
-              <section className={styles.section}>
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
                 <h3 className={styles.sectionTitle}>Tags</h3>
-                <div className={styles.tagsContainer}>
-                  {displayIndicator.tags.map((tag) => (
-                    <span key={tag.id} className={styles.tagPill}>
-                      {tag.name}
-                    </span>
-                  ))}
+                {!isEditingTags && (
+                  <button 
+                    onClick={handleEditTags}
+                    className={styles.editButton}
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+              
+              {isEditingTags ? (
+                <div className={styles.tagEditContainer}>
+                  <TagManager
+                    initialTags={displayIndicator.tags || []}
+                    onChange={handleTagsChange}
+                  />
+                  <div className={styles.tagEditButtons}>
+                    <button 
+                      onClick={handleSaveTags}
+                      disabled={savingTags}
+                      className={styles.saveButton}
+                    >
+                      {savingTags ? 'Saving...' : 'Save'}
+                    </button>
+                    <button 
+                      onClick={handleCancelEditTags}
+                      disabled={savingTags}
+                      className={styles.cancelButton}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-              </section>
-            )}
+              ) : (
+                <div className={styles.tagsContainer}>
+                  {displayIndicator.tags && displayIndicator.tags.length > 0 ? (
+                    displayIndicator.tags.map((tag) => (
+                      <span key={tag.id} className={styles.tagPill}>
+                        {tag.name}
+                      </span>
+                    ))
+                  ) : (
+                    <span className={styles.noTags}>No tags assigned</span>
+                  )}
+                </div>
+              )}
+            </section>
 
             {/* IP Enrichment Section */}
             {displayIndicator.type === 'ip' && (
