@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { motion, AnimatePresence } from 'framer-motion';
+import clsx from 'clsx';
 import { Indicator, Tag } from '../../types';
 import { indicatorService, updateIndicatorTags } from '../../services/api';
 import { IpGeolocationMap } from './IpGeolocationMap';
@@ -19,6 +20,7 @@ export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) =>
   const [isEditingTags, setIsEditingTags] = useState(false);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [savingTags, setSavingTags] = useState(false);
+  const [isTagMenuOpen, setIsTagMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchDetailedIndicator = async () => {
@@ -89,10 +91,6 @@ export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) =>
     } finally {
       setSavingTags(false);
     }
-  };
-
-  const handleTagsChange = (tags: Tag[]) => {
-    setSelectedTags(tags);
   };
 
   return (
@@ -213,10 +211,13 @@ export const IndicatorDetailPanel: React.FC<Props> = ({ indicator, onClose }) =>
               </div>
               
               {isEditingTags ? (
-                <div className={styles.tagEditContainer}>
+                <div className={clsx(styles.tagEditContainer, { [styles.menuIsOpen]: isTagMenuOpen })}>
                   <TagManager
-                    initialTags={displayIndicator.tags || []}
-                    onChange={handleTagsChange}
+                    initialTags={selectedTags}
+                    onChange={setSelectedTags}
+                    onMenuOpen={() => setIsTagMenuOpen(true)}
+                    onMenuClose={() => setIsTagMenuOpen(false)}
+                    menuIsOpen={isTagMenuOpen}
                   />
                   <div className={styles.tagEditButtons}>
                     <button 

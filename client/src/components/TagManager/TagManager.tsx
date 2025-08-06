@@ -6,9 +6,12 @@ import { Tag } from '../../types';
 interface TagManagerProps {
   initialTags: Tag[];
   onChange: (selectedTags: Tag[]) => void;
+  onMenuOpen: () => void;
+  onMenuClose: () => void;
+  menuIsOpen: boolean;
 }
 
-const TagManager: React.FC<TagManagerProps> = ({ initialTags, onChange }) => {
+const TagManager: React.FC<TagManagerProps> = ({ initialTags, onChange, onMenuOpen, onMenuClose, menuIsOpen }) => {
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedOptions, setSelectedOptions] = useState<any>([]);
 
@@ -83,7 +86,9 @@ const TagManager: React.FC<TagManagerProps> = ({ initialTags, onChange }) => {
       onChange={handleSelectionChange}
       placeholder="Select tags..."
       noOptionsMessage={() => 'No tags found'}
-      menuPortalTarget={document.body}
+      onMenuOpen={onMenuOpen}
+      onMenuClose={onMenuClose}
+      menuIsOpen={menuIsOpen}
       styles={customStyles}
     />
   );

@@ -419,3 +419,11 @@
   font-style: italic;
   font-size: 0.875rem;
 }
+
+.tagEditContainer {
+  transition: padding-bottom 0.2s ease-in-out;
+}
+
+.menuIsOpen {
+  padding-bottom: 250px; /* Aggiunge spazio per il menu, spingendo il contenuto sottostante verso il basso */
+}
