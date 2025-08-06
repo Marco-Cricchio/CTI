@@ -85,14 +85,6 @@
   background: var(--bg-tertiary);
 }
 
-.content {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
 
 .filterSection {
   display: flex;
@@ -154,6 +146,32 @@
 
 .select {
   width: 100%;
+  position: relative;
+}
+
+/* Assicura che il pannello filtri non nasconda il dropdown */
+.content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  /* Aggiungi spazio per il dropdown quando aperto */
+  padding-bottom: 40px;
+}
+
+/* Stili globali per react-select nel portal */
+:global(.select__menu-portal) {
+  z-index: 9999 !important;
+}
+
+:global(.select__menu) {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--text-tertiary) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 6px !important;
+  max-height: 200px !important;
 }
 
 .actions {

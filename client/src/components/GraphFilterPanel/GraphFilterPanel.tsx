@@ -15,6 +15,7 @@ interface GraphFilterPanelProps {
   onApplyFilters: (filters: GraphFilters) => void;
   isOpen: boolean;
   onToggle: () => void;
+  activeFilters?: GraphFilters;
 }
 
 const THREAT_LEVELS = [
@@ -35,11 +36,17 @@ const INDICATOR_TYPES = [
 export const GraphFilterPanel: React.FC<GraphFilterPanelProps> = ({ 
   onApplyFilters, 
   isOpen, 
-  onToggle 
+  onToggle,
+  activeFilters = {}
 }) => {
-  const [filters, setFilters] = useState<GraphFilters>({});
+  const [filters, setFilters] = useState<GraphFilters>(activeFilters);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sincronizza i filtri locali con i filtri attivi
+  useEffect(() => {
+    setFilters(activeFilters);
+  }, [activeFilters]);
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -187,6 +194,10 @@ export const GraphFilterPanel: React.FC<GraphFilterPanelProps> = ({
               placeholder="Select tags..."
               className={styles.select}
               classNamePrefix="select"
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+              menuPlacement="auto"
+              maxMenuHeight={200}
               styles={{
                 control: (provided) => ({
                   ...provided,
@@ -194,17 +205,22 @@ export const GraphFilterPanel: React.FC<GraphFilterPanelProps> = ({
                   borderColor: 'var(--text-tertiary)',
                   color: 'var(--text-primary)'
                 }),
+                menuPortal: (provided) => ({
+                  ...provided,
+                  zIndex: 9999
+                }),
                 menu: (provided) => ({
                   ...provided,
                   backgroundColor: 'var(--bg-secondary)',
-                  maxHeight: '200px',
-                  overflowY: 'auto',
-                  zIndex: 9999
+                  border: '1px solid var(--text-tertiary)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+                  borderRadius: '6px'
                 }),
                 menuList: (provided) => ({
                   ...provided,
-                  maxHeight: '180px',
-                  overflowY: 'auto'
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  padding: '4px 0'
                 }),
                 option: (provided, state) => ({
                   ...provided,
@@ -213,11 +229,29 @@ export const GraphFilterPanel: React.FC<GraphFilterPanelProps> = ({
                     : state.isFocused 
                     ? 'var(--bg-tertiary)' 
                     : 'transparent',
-                  color: 'var(--text-primary)'
+                  color: 'var(--text-primary)',
+                  padding: '8px 12px',
+                  cursor: 'pointer'
+                }),
+                multiValue: (provided) => ({
+                  ...provided,
+                  backgroundColor: 'var(--accent-blue)',
+                  borderRadius: '4px'
+                }),
+                multiValueLabel: (provided) => ({
+                  ...provided,
+                  color: 'white',
+                  fontSize: '0.875rem'
+                }),
+                multiValueRemove: (provided) => ({
+                  ...provided,
+                  color: 'white',
+                  ':hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    color: 'white'
+                  }
                 })
               }}
-              menuPortalTarget={document.body}
-              menuPosition="fixed"
             />
           </div>
 
