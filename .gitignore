@@ -56,4 +56,17 @@ Thumbs.db
 /coverage
 
 # TypeScript cache
-*.tsbuildinfoserver/dump.rdb
+*.tsbuildinfo
+
+# Redis database dump
+server/dump.rdb
+
+# Exclude all .md files except README.md
+*.md
+!README.md
+
+# Exclude all .png files in root directory
+/*.png
+
+# Exclude style-guide files
+style-guide.*
