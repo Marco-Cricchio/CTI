@@ -56,4 +56,4 @@ Thumbs.db
 /coverage
 
 # TypeScript cache
-*.tsbuildinfo
+*.tsbuildinfoserver/dump.rdb
