@@ -70,3 +70,7 @@ server/dump.rdb
 
 # Exclude style-guide files
 style-guide.*
+
+# Exclude Claude and GitHub workflow directories
+.claude/
+.github/
